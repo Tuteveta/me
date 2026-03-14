@@ -92,57 +92,59 @@ export default function ReportsPage() {
 
       {/* Reports table */}
       <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Report Title</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Program</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Type</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Period</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Submitted By</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Due Date</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
-              <th className="w-10" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(r => {
-              const cfg = STATUS_CONFIG[r.status]
-              const StatusIcon = cfg.icon
-              const isOverdue = r.status === 'overdue'
-              return (
-                <tr key={r.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isOverdue ? 'bg-red-50/20' : ''}`}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                      <span className="font-medium text-gray-900 max-w-[240px] truncate">{r.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.program}</td>
-                  <td className="px-4 py-3 text-gray-500 capitalize whitespace-nowrap">{r.type}</td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.period}</td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.submittedBy}</td>
-                  <td className={`px-4 py-3 whitespace-nowrap ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                    {r.dueDate}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.badge}`}>
-                      <StatusIcon className="w-2.5 h-2.5" />
-                      {cfg.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {(r.status === 'approved' || r.status === 'submitted') && (
-                      <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Download">
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-150">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Report Title</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Program</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Type</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Period</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden lg:table-cell">Submitted By</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Due Date</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
+                <th className="w-10" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => {
+                const cfg = STATUS_CONFIG[r.status]
+                const StatusIcon = cfg.icon
+                const isOverdue = r.status === 'overdue'
+                return (
+                  <tr key={r.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isOverdue ? 'bg-red-50/20' : ''}`}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="font-medium text-gray-900 max-w-50 truncate">{r.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden md:table-cell">{r.program}</td>
+                    <td className="px-4 py-3 text-gray-500 capitalize whitespace-nowrap">{r.type}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden md:table-cell">{r.period}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden lg:table-cell">{r.submittedBy}</td>
+                    <td className={`px-4 py-3 whitespace-nowrap hidden sm:table-cell ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                      {r.dueDate}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.badge}`}>
+                        <StatusIcon className="w-2.5 h-2.5" />
+                        {cfg.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {(r.status === 'approved' || r.status === 'submitted') && (
+                        <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Download">
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {filtered.length === 0 && (
           <div className="py-12 text-center text-gray-400 text-sm">No reports match your filter.</div>
@@ -152,7 +154,7 @@ export default function ReportsPage() {
       {/* Overdue notice */}
       {counts.overdue > 0 && (
         <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-sm p-4">
-          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
           <div>
             <p className="text-xs font-bold text-red-800">
               {counts.overdue} report{counts.overdue > 1 ? 's are' : ' is'} overdue

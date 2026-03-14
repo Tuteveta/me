@@ -131,7 +131,7 @@ function KRASection({
             {kra.description && <p className="text-xs text-gray-400 truncate">{kra.description}</p>}
           </div>
         ) : (
-          <div className="flex-1 grid grid-cols-2 gap-2 min-w-0">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
             <input
               className="border border-gray-200 rounded px-2 py-1.5 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-blue-400"
               value={kra.title} placeholder="KRA Title"
@@ -328,7 +328,7 @@ export default function WorkplanPage() {
               className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
               placeholder="Workplan title *" value={newTitle} onChange={e => setNewTitle(e.target.value)}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 className="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
                 placeholder="Fiscal year (e.g. FY 2025/26)" value={newYear} onChange={e => setNewYear(e.target.value)}
@@ -399,7 +399,7 @@ export default function WorkplanPage() {
         <div className="flex-1 min-w-0 flex flex-col gap-3 overflow-y-auto">
 
           {/* Header */}
-          <div className="bg-white border border-gray-200 rounded-sm px-5 py-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="bg-white border border-gray-200 rounded-sm px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-base font-bold text-gray-900">{active.title}</h1>
@@ -430,7 +430,7 @@ export default function WorkplanPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {saved && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                   <CheckCircle className="w-3.5 h-3.5" /> Saved

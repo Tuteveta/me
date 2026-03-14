@@ -48,7 +48,7 @@ export default function KPIPage() {
           <h1 className="text-base font-bold text-gray-900">KPI Monitoring</h1>
           <p className="text-xs text-gray-400 mt-0.5">{KPIS.length} indicators tracked across 5 programme areas</p>
         </div>
-        <div className="flex gap-3 text-xs">
+        <div className="flex flex-wrap gap-2 text-xs">
           <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span className="text-emerald-700 font-semibold">{summary.onTrack} On Track</span>
@@ -83,73 +83,75 @@ export default function KPIPage() {
 
       {/* KPI Table */}
       <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Indicator</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Program</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-semibold">Baseline</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-semibold">Target</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-semibold">Actual</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-semibold">Progress</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-semibold">Trend</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(k => {
-              const cfg = STATUS_CONFIG[k.status]
-              const pct = Math.min(Math.round((k.actual / k.target) * 100), 100)
-              const TrendIcon = TREND_ICONS[k.trend]
-              return (
-                <tr
-                  key={k.id}
-                  className="border-b border-gray-100 hover:bg-blue-50/30 cursor-pointer transition-colors"
-                  onClick={() => setSelected(k)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span>{trafficLight(k.status)}</span>
-                      <span className="font-medium text-gray-900">{k.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{k.program}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">
-                    {k.baseline} <span className="text-gray-400">{k.unit}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-gray-700">
-                    {k.target} <span className="text-gray-400">{k.unit}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-bold text-gray-900">
-                    {k.actual} <span className="text-gray-400 font-normal">{k.unit}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${pct}%`,
-                            background: k.status === 'off-track' ? '#EF4444' : k.status === 'at-risk' ? '#F59E0B' : '#10B981',
-                          }}
-                        />
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-150">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Indicator</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Program</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Baseline</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-semibold">Target</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-semibold">Actual</th>
+                <th className="text-right px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Progress</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-semibold">Trend</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(k => {
+                const cfg = STATUS_CONFIG[k.status]
+                const pct = Math.min(Math.round((k.actual / k.target) * 100), 100)
+                const TrendIcon = TREND_ICONS[k.trend]
+                return (
+                  <tr
+                    key={k.id}
+                    className="border-b border-gray-100 hover:bg-blue-50/30 cursor-pointer transition-colors"
+                    onClick={() => setSelected(k)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span>{trafficLight(k.status)}</span>
+                        <span className="font-medium text-gray-900">{k.name}</span>
                       </div>
-                      <span className="text-gray-600 w-8 text-right">{pct}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.badge}`}>
-                      {cfg.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <TrendIcon className={`w-3.5 h-3.5 mx-auto ${TREND_COLORS[k.trend]}`} />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden sm:table-cell">{k.program}</td>
+                    <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">
+                      {k.baseline} <span className="text-gray-400">{k.unit}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-700">
+                      {k.target} <span className="text-gray-400">{k.unit}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-gray-900">
+                      {k.actual} <span className="text-gray-400 font-normal">{k.unit}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right hidden sm:table-cell">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${pct}%`,
+                              background: k.status === 'off-track' ? '#EF4444' : k.status === 'at-risk' ? '#F59E0B' : '#10B981',
+                            }}
+                          />
+                        </div>
+                        <span className="text-gray-600 w-8 text-right">{pct}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.badge}`}>
+                        {cfg.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <TrendIcon className={`w-3.5 h-3.5 mx-auto ${TREND_COLORS[k.trend]}`} />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* KPI Detail slide-in */}

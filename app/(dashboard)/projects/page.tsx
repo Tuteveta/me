@@ -52,7 +52,7 @@ export default function ProjectsPage() {
             placeholder="Search projects…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-gray-200 rounded px-3 py-1.5 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="border border-gray-200 rounded px-3 py-1.5 text-xs w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {/* View toggle */}
           <button
@@ -169,51 +169,53 @@ export default function ProjectsPage() {
       {/* List View */}
       {view === 'list' && (
         <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Project</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Program</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-semibold">Status</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-semibold">Completion</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-semibold">Budget</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-semibold">Due</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(p => {
-                const cfg = STATUS_CONFIG[p.status]
-                return (
-                  <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900 truncate max-w-[200px]">{p.name}</p>
-                      <p className="text-gray-400 text-[10px]">Lead: {p.lead}</p>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.program}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${cfg.badge}`}>
-                        {cfg.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-blue-500" style={{ width: `${p.completion}%` }} />
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-150">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-left px-4 py-3 text-gray-500 font-semibold">Project</th>
+                  <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Program</th>
+                  <th className="text-left px-4 py-3 text-gray-500 font-semibold">Status</th>
+                  <th className="text-right px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Completion</th>
+                  <th className="text-right px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Budget</th>
+                  <th className="text-right px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Due</th>
+                  <th className="w-8" />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(p => {
+                  const cfg = STATUS_CONFIG[p.status]
+                  return (
+                    <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-gray-900 truncate max-w-50">{p.name}</p>
+                        <p className="text-gray-400 text-[10px]">Lead: {p.lead}</p>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden sm:table-cell">{p.program}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${cfg.badge}`}>
+                          {cfg.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right hidden sm:table-cell">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-blue-500" style={{ width: `${p.completion}%` }} />
+                          </div>
+                          <span className="text-gray-700 font-bold w-8 text-right">{p.completion}%</span>
                         </div>
-                        <span className="text-gray-700 font-bold w-8 text-right">{p.completion}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-600 whitespace-nowrap">{fmt(p.budget)}</td>
-                    <td className="px-4 py-3 text-right text-gray-500 whitespace-nowrap">{p.endDate}</td>
-                    <td className="px-4 py-3">
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-600 whitespace-nowrap hidden md:table-cell">{fmt(p.budget)}</td>
+                      <td className="px-4 py-3 text-right text-gray-500 whitespace-nowrap hidden md:table-cell">{p.endDate}</td>
+                      <td className="px-4 py-3">
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

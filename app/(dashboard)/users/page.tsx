@@ -28,7 +28,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
   const [division, setDivision] = useState(DIVISIONS[0])
   const [error, setError]       = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!name.trim())  { setError('Name is required.'); return }
     if (!email.trim()) { setError('Email is required.'); return }
@@ -71,7 +71,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Full Name <span className="text-red-500">*</span></label>
               <input className={inputCls} placeholder="e.g. Jane Doe" value={name} onChange={e => { setName(e.target.value); setError('') }} />
@@ -82,7 +82,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Role</label>
               <select className={inputCls} value={role} onChange={e => setRole(e.target.value as UserRole)}>
@@ -194,7 +194,7 @@ export default function UsersPage() {
             placeholder="Search users…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-gray-200 rounded pl-9 pr-3 py-1.5 text-xs w-56 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="border border-gray-200 rounded pl-9 pr-3 py-1.5 text-xs w-full sm:w-56 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div className="flex gap-2">
@@ -216,56 +216,58 @@ export default function UsersPage() {
 
       {/* Users table */}
       <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">User</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Division</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-semibold">Role</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Last Login</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-semibold">Created</th>
-              <th className="w-10" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((u: ManagedUser) => (
-              <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-white text-[11px] font-black flex-shrink-0">
-                      {u.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{u.name}</p>
-                      <p className="text-gray-400">{u.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{u.division}</td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${ROLE_BADGE[u.role]}`}>
-                    {u.role}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {u.status === 'active' ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500 mx-auto" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-gray-300 mx-auto" />
-                  )}
-                </td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{relativeTime(u.lastLogin)}</td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{u.createdAt}</td>
-                <td className="px-4 py-3">
-                  <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-150">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold">User</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden md:table-cell">Division</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-semibold">Role</th>
+                <th className="text-center px-4 py-3 text-gray-500 font-semibold">Status</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden sm:table-cell">Last Login</th>
+                <th className="text-left px-4 py-3 text-gray-500 font-semibold hidden lg:table-cell">Created</th>
+                <th className="w-10" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((u: ManagedUser) => (
+                <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-white text-[11px] font-black shrink-0">
+                        {u.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{u.name}</p>
+                        <p className="text-gray-400 truncate">{u.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden md:table-cell">{u.division}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${ROLE_BADGE[u.role]}`}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {u.status === 'active' ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mx-auto" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-gray-300 mx-auto" />
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden sm:table-cell">{relativeTime(u.lastLogin)}</td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap hidden lg:table-cell">{u.createdAt}</td>
+                  <td className="px-4 py-3">
+                    <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {filtered.length === 0 && (
           <div className="py-12 text-center text-gray-400 text-sm">No users match your search.</div>
@@ -275,7 +277,7 @@ export default function UsersPage() {
       {/* Role legend */}
       <div className="bg-blue-50 border border-blue-200 rounded-sm p-4">
         <p className="text-xs font-semibold text-blue-800 mb-2">Role Access Levels</p>
-        <div className="grid grid-cols-3 gap-3 text-xs text-blue-700">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-blue-700">
           <div>
             <span className="font-bold text-red-700">Super</span>
             <p className="text-[11px] text-gray-500 mt-0.5">Full system access including user management, settings, and audit logs.</p>

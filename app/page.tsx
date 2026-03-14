@@ -63,15 +63,16 @@ export default function LandingPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-3">
 
           {/* Title only — no logo */}
-          <div className="leading-tight">
-            <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none">
+          <div className="leading-tight min-w-0 flex-1">
+            <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none hidden sm:block">
               Government of Papua New Guinea
             </p>
-            <p className="text-sm font-bold text-gray-900 leading-tight">
-              Dept. of Information Communication &amp; Technology
+            <p className="text-sm font-bold text-gray-900 leading-tight truncate">
+              <span className="hidden sm:inline">Dept. of Information Communication &amp; Technology</span>
+              <span className="sm:hidden">DICT M&amp;E Dashboard</span>
             </p>
           </div>
 
@@ -97,8 +98,8 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero — centered ────────────────────────────────────────────────── */}
-      <section className="pt-16 px-6 bg-white">
-        <div className="max-w-2xl mx-auto w-full py-14 text-center">
+      <section className="pt-16 px-4 sm:px-6 bg-white">
+        <div className="max-w-2xl mx-auto w-full py-10 sm:py-14 text-center">
 
           {/* Live badge */}
           <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 mb-5">
@@ -150,8 +151,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats ──────────────────────────────────────────────────────────── */}
-      <section className="bg-gray-50 border-y border-gray-200 py-14">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="bg-gray-50 border-y border-gray-200 py-10 sm:py-14">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {STATS.map(s => (
             <div key={s.label} className="text-center">
               <div className="text-4xl font-black text-blue-700 mb-1">{s.value}</div>
@@ -162,9 +163,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ───────────────────────────────────────────────────────── */}
-      <section id="features" className="py-24 px-6 bg-white">
+      <section id="features" className="py-16 sm:py-24 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 sm:mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 mb-3">Platform Features</p>
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
               Everything you need for effective M&amp;E
@@ -189,7 +190,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ────────────────────────────────────────────────────────────── */}
-      <section id="about" className="py-24 px-6 bg-blue-700">
+      <section id="about" className="py-16 sm:py-24 px-4 sm:px-6 bg-blue-700">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-4">
             Government of Papua New Guinea
@@ -217,9 +218,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="bg-gray-900 text-gray-400 py-12 px-6">
+      <footer className="bg-gray-900 text-gray-400 py-10 sm:py-12 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-10 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 mb-8 sm:mb-10">
 
             {/* Brand */}
             <div>
