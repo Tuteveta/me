@@ -362,7 +362,16 @@ export default function LandingPage() {
             <p className="text-xs">
               © 2026 Department of Information Communication &amp; Technology, Government of Papua New Guinea.
             </p>
-            <p className="text-xs text-gray-600">v1.0.0 · M&amp;E Build · FY 2024/25</p>
+            <div className="flex items-center gap-4">
+              <p className="text-xs text-gray-600">v1.0.0 · M&amp;E Build · FY 2024/25</p>
+              <a
+                href="#"
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Back to top
+                <ArrowRight className="w-3 h-3 -rotate-90" />
+              </a>
+            </div>
           </div>
         </div>
       </footer>
