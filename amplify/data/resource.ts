@@ -6,14 +6,26 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 const schema = a.schema({
   // ── Enums ────────────────────────────────────────────────────────────────
-  UserRole:       a.enum(['super', 'admin', 'officer']),
+  UserRole: a.enum(['super', 'admin', 'finance', 'executive', 'deputy', 'dcs']),
+
   ProjectStatus:  a.enum(['active', 'completed', 'on_hold', 'delayed', 'planned']),
   KPIStatus:      a.enum(['on_track', 'at_risk', 'off_track', 'exceeded']),
   KPITrend:       a.enum(['up', 'down', 'stable']),
   ReportStatus:   a.enum(['submitted', 'pending', 'overdue', 'approved']),
   ReportType:     a.enum(['quarterly', 'monthly', 'annual', 'ad_hoc']),
   WorkplanStatus: a.enum(['draft', 'submitted', 'approved', 'active']),
-  ProgramArea:    a.enum([
+
+  RequestStage: a.enum([
+    'pending_em',
+    'pending_deputy',
+    'pending_dcs',
+    'pending_finance',
+    'pending_acquittal',
+    'closed',
+    'rejected',
+  ]),
+
+  ProgramArea: a.enum([
     'Infrastructure',
     'Digital_Transformation',
     'Capacity_Building',
@@ -21,16 +33,30 @@ const schema = a.schema({
     'Cybersecurity',
   ]),
 
+  // ── Custom types (embedded objects) ─────────────────────────────────────
+  ApprovalEntry: a.customType({
+    decision: a.string().required(),   // 'pending' | 'approved' | 'rejected'
+    by:       a.string(),
+    at:       a.string(),
+    comment:  a.string(),
+  }),
+
+  RequestAttachment: a.customType({
+    name: a.string().required(),
+    size: a.integer().required(),      // bytes
+    type: a.string().required(),       // MIME type
+    url:  a.string().required(),       // S3 key / signed URL
+  }),
+
   // ── Projects ─────────────────────────────────────────────────────────────
-  // Mirrors: types/index.ts → Project, Milestone
   Project: a
     .model({
       name:          a.string().required(),
       program:       a.ref('ProgramArea').required(),
       status:        a.ref('ProjectStatus').required(),
-      completion:    a.integer().required(),   // 0–100 %
-      budget:        a.float().required(),     // PGK
-      spent:         a.float().required(),     // PGK
+      completion:    a.integer().required(),
+      budget:        a.float().required(),
+      spent:         a.float().required(),
       startDate:     a.string().required(),
       endDate:       a.string().required(),
       lead:          a.string().required(),
@@ -51,7 +77,6 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()]),
 
   // ── KPI Monitoring ───────────────────────────────────────────────────────
-  // Mirrors: types/index.ts → KPI, KPIDataPoint
   KPI: a
     .model({
       name:        a.string().required(),
@@ -78,7 +103,6 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()]),
 
   // ── Reports ──────────────────────────────────────────────────────────────
-  // Mirrors: types/index.ts → Report
   Report: a
     .model({
       title:       a.string().required(),
@@ -94,15 +118,14 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()]),
 
   // ── Annual Workplan ──────────────────────────────────────────────────────
-  // Mirrors: types/index.ts → AnnualWorkplan, KRA, WorkplanKPI
   AnnualWorkplan: a
     .model({
       title:      a.string().required(),
       fiscalYear: a.string().required(),
-      period:     a.string().required(),        // e.g. "Jan 2025 – Dec 2025"
+      period:     a.string().required(),
       division:   a.string().required(),
       objective:  a.string().required(),
-      budget:     a.float().required(),         // PGK
+      budget:     a.float().required(),
       createdBy:  a.string().required(),
       approvedBy: a.string(),
       status:     a.ref('WorkplanStatus').required(),
@@ -116,7 +139,7 @@ const schema = a.schema({
       workplan:     a.belongsTo('AnnualWorkplan', 'workplanId'),
       title:        a.string().required(),
       description:  a.string(),
-      weight:       a.integer().required(),     // %; all KRAs per workplan sum to 100
+      weight:       a.integer().required(),
       workplanKPIs: a.hasMany('WorkplanKPI', 'kraId'),
     })
     .authorization((allow) => [allow.authenticated()]),
@@ -138,15 +161,41 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // ── Funding Requests (multi-step approval workflow) ──────────────────────
+  // Workflow: M&E Manager → Exec. Manager → Deputy Sec.
+  //           → Dir. Corp. Services → Finance → Acquittal → Closed
+  FundingRequest: a
+    .model({
+      programme:            a.string().required(),
+      description:          a.string().required(),
+      amount:               a.float().required(),
+      fiscalYear:           a.string().required(),
+      submittedBy:          a.string().required(),
+      submittedAt:          a.string().required(),
+      stage:                a.ref('RequestStage').required(),
+      budgetLine:           a.string(),
+      // Approval decisions (serialised JSON: ApprovalEntry)
+      emDecision:           a.string(),
+      deputyDecision:       a.string(),
+      dcsDecision:          a.string(),
+      financeDecision:      a.string(),
+      // Attachments (serialised JSON array: RequestAttachment[])
+      attachments:          a.string(),
+      // Acquittal report
+      acquittalNotes:       a.string(),
+      acquittalSubmittedAt: a.string(),
+      acquittalAttachments: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // ── Managed Users (super-admin provisioned) ──────────────────────────────
-  // Mirrors: types/index.ts → ManagedUser
   ManagedUser: a
     .model({
       name:      a.string().required(),
       email:     a.string().required(),
       role:      a.ref('UserRole').required(),
       division:  a.string().required(),
-      status:    a.string().required(),         // 'active' | 'inactive'
+      status:    a.string().required(),
       lastLogin: a.string(),
     })
     .authorization((allow) => [allow.authenticated()]),
