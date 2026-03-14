@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { Bell, RefreshCw } from 'lucide-react'
+import { Bell, RefreshCw, Menu } from 'lucide-react'
 
 const BREADCRUMBS: Record<string, { label: string; parent?: string }> = {
   '/dashboard': { label: 'Overview' },
@@ -27,19 +27,26 @@ function useNow() {
   })
 }
 
-export default function TopBar() {
+export default function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
   const pathname = usePathname()
   const { user } = useAuth()
   const crumb = BREADCRUMBS[pathname] ?? { label: 'Dashboard' }
   const now = useNow()
 
   return (
-    <header className="h-[48px] bg-white border-b border-gray-200 flex items-center justify-between px-5 flex-shrink-0">
+    <header className="h-[48px] bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-5 flex-shrink-0">
 
-      {/* Left — breadcrumb */}
+      {/* Left — hamburger (mobile) + breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-400 text-xs">DICT M&amp;E</span>
-        <span className="text-gray-300">/</span>
+        <button
+          onClick={onMenuOpen}
+          className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+          title="Menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+        <span className="text-gray-400 text-xs hidden sm:inline">DICT M&amp;E</span>
+        <span className="text-gray-300 hidden sm:inline">/</span>
         <span className="font-semibold text-gray-900 text-xs">{crumb.label}</span>
       </div>
 

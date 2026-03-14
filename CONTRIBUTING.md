@@ -1,59 +1,123 @@
 # Contributing Guidelines
 
-Thank you for your interest in contributing to our project. Whether it's a bug report, new feature, correction, or additional
-documentation, we greatly value feedback and contributions from our community.
+Thank you for contributing to the DICT M&E Dashboard. This document covers how to report bugs, request features, and submit code changes.
 
-Please read through this document before submitting any issues or pull requests to ensure we have all the necessary
-information to effectively respond to your bug report or contribution.
+---
 
+## Before You Start
 
-## Reporting Bugs/Feature Requests
+- Read the [README](README.md) to understand the project structure and technology stack.
+- Review open issues and pull requests to avoid duplicating work.
+- For significant changes, open an issue first to discuss your approach.
 
-We welcome you to use the GitHub issue tracker to report bugs or suggest features.
+---
 
-When filing an issue, please check existing open, or recently closed, issues to make sure somebody else hasn't already
-reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
+## Reporting Bugs
 
-* A reproducible test case or series of steps
-* The version of our code being used
-* Any modifications you've made relevant to the bug
-* Anything unusual about your environment or deployment
+Use the GitHub issue tracker. When filing a bug, include:
 
+- A clear description of the problem and the steps to reproduce it.
+- The dashboard module affected (e.g. Projects, KPI Monitoring, Annual Workplan).
+- The user role that exposes the issue (super / admin / officer).
+- Browser, OS, and Node.js version.
+- Any relevant console errors or screenshots.
 
-## Contributing via Pull Requests
-Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
+---
 
-1. You are working against the latest source on the *main* branch.
-2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
-3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
+## Requesting Features
 
-To send us a pull request, please:
+Open a GitHub issue with the label `enhancement`. Describe:
 
-1. Fork the repository.
-2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
-3. Ensure local tests pass.
-4. Commit to your fork using clear commit messages.
-5. Send us a pull request, answering any default questions in the pull request interface.
-6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+- The dashboard module or workflow the feature relates to.
+- The user role(s) that would benefit.
+- The problem it solves for DICT staff.
 
-GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
-[creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
+---
 
+## Contributing Code
 
-## Finding contributions to work on
-Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any 'help wanted' issues is a great place to start.
+### Setup
 
+```bash
+git clone <repo-url>
+cd me
+npm install
+npm run dev
+```
 
-## Code of Conduct
-This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct).
-For more information see the [Code of Conduct FAQ](https://aws.github.io/code-of-conduct-faq) or contact
-opensource-codeofconduct@amazon.com with any additional questions or comments.
+### Branch naming
 
+Use descriptive branch names that reference the dashboard module:
 
-## Security issue notifications
-If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please do **not** create a public github issue.
+```
+feat/workplan-export-pdf
+fix/kpi-trend-chart-mobile
+chore/update-amplify-schema
+```
 
+### Pull Request checklist
 
-## Licensing
+Before opening a PR:
 
-See the [LICENSE](LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
+1. Work against the latest `main` branch.
+2. Keep changes focused — one concern per PR.
+3. Ensure `npm run build` passes with no TypeScript errors.
+4. Test all three user roles (super, admin, officer) if your change touches auth or navigation.
+5. If you change `amplify/data/resource.ts`, verify that `types/index.ts` stays in sync — backend model names and field names must match the frontend types.
+6. Write clear commit messages (e.g. `fix: correct KRA weight validation in workplan page`).
+
+### Keeping backend and frontend in sync
+
+The backend schema (`amplify/data/resource.ts`) and the frontend types (`types/index.ts`) must stay aligned. When adding or renaming a model or field:
+
+- Update `amplify/data/resource.ts` first.
+- Update the corresponding interface or type in `types/index.ts`.
+- Update any mock data in `lib/mock-data/me-data.ts` if needed.
+- Update the relevant dashboard page under `app/(dashboard)/`.
+
+---
+
+## Project Conventions
+
+### User roles
+
+Always test changes against all three roles. Role-gated navigation is defined in `components/layout/Sidebar.tsx`. Page-level restrictions should match the sidebar rules.
+
+### Status enums
+
+Statuses used in the dashboard (and their backend enum equivalents):
+
+| Domain | Frontend values | Backend enum values |
+|--------|----------------|---------------------|
+| Project | `active`, `completed`, `on-hold`, `delayed`, `planned` | `active`, `completed`, `on_hold`, `delayed`, `planned` |
+| KPI | `on-track`, `at-risk`, `off-track`, `exceeded` | `on_track`, `at_risk`, `off_track`, `exceeded` |
+| Report | `submitted`, `pending`, `overdue`, `approved` | same |
+| Workplan | `draft`, `submitted`, `approved`, `active` | same |
+
+Note: GraphQL enum values use underscores; frontend display strings use hyphens.
+
+### Currency
+
+All monetary values are in PGK (Papua New Guinea Kina). Do not introduce other currencies.
+
+### Dates
+
+Use ISO 8601 strings (`YYYY-MM-DD`) for date fields in data models. Display formatting is handled at the component level using `date-fns`.
+
+### Fiscal year
+
+The DICT fiscal year runs January to December. Quarter labels (Q1–Q4) in the workplan correspond to Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec respectively.
+
+---
+
+## Security
+
+Do **not** commit real credentials, API keys, or government data to this repository. The `amplify_outputs.json` file is gitignored for this reason — never force-add it.
+
+To report a security vulnerability, contact the DICT ICT team directly. Do not create a public GitHub issue.
+
+---
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same MIT-0 License that covers this project. See the [LICENSE](LICENSE) file.

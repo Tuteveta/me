@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import type { UserRole } from '@/lib/auth-context'
 import {
   LayoutDashboard, FolderKanban, Target, FileText,
-  Settings, Users, ChevronLeft, ChevronRight, LogOut, ClipboardList,
+  Settings, Users, ChevronLeft, ChevronRight, LogOut, ClipboardList, X,
 } from 'lucide-react'
 
 interface NavItem {
@@ -18,23 +18,27 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Overview',     href: '/dashboard',  roles: ['super', 'admin', 'officer'] },
-  { icon: FolderKanban,   label: 'Projects',      href: '/projects',   roles: ['super', 'admin', 'officer'] },
-  { icon: Target,         label: 'KPI Monitoring', href: '/kpi',       roles: ['super', 'admin', 'officer'] },
-  { icon: FileText,       label: 'Reports',        href: '/reports',   roles: ['super', 'admin', 'officer'] },
+  { icon: LayoutDashboard, label: 'Overview',       href: '/dashboard', roles: ['super', 'admin', 'officer'] },
+  { icon: FolderKanban,   label: 'Projects',        href: '/projects',  roles: ['super', 'admin', 'officer'] },
+  { icon: Target,         label: 'KPI Monitoring',  href: '/kpi',       roles: ['super', 'admin', 'officer'] },
+  { icon: FileText,       label: 'Reports',         href: '/reports',   roles: ['super', 'admin', 'officer'] },
   { icon: ClipboardList,  label: 'Annual Workplan', href: '/workplan',  roles: ['super', 'admin'] },
-  { icon: Settings,       label: 'Settings',       href: '/settings',  roles: ['super', 'admin'] },
-  { icon: Users,          label: 'User Management', href: '/users',    roles: ['super'] },
+  { icon: Settings,       label: 'Settings',        href: '/settings',  roles: ['super', 'admin'] },
+  { icon: Users,          label: 'User Management', href: '/users',     roles: ['super'] },
 ]
 
-
 const ROLE_COLORS: Record<UserRole, string> = {
-  super: 'bg-red-100 text-red-700',
-  admin: 'bg-amber-100 text-amber-700',
+  super:   'bg-red-100 text-red-700',
+  admin:   'bg-amber-100 text-amber-700',
   officer: 'bg-blue-100 text-blue-700',
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
@@ -43,22 +47,29 @@ export default function Sidebar() {
     item => !user || item.roles.includes(user.role)
   )
 
-  return (
+  const inner = (
     <aside
       className={`
-        flex flex-col h-screen bg-white border-r border-gray-200
+        flex flex-col h-full bg-white border-r border-gray-200
         transition-all duration-200 flex-shrink-0
         ${collapsed ? 'w-[56px]' : 'w-[220px]'}
       `}
     >
       {/* Brand */}
-      <div className={`flex items-center h-[48px] border-b border-gray-200 px-3 flex-shrink-0 ${collapsed ? 'justify-center' : ''}`}>
+      <div className={`flex items-center h-[48px] border-b border-gray-200 px-3 flex-shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-[11px] font-black text-blue-700 leading-tight tracking-wide truncate">DICT</p>
             <p className="text-[9px] text-gray-400 leading-tight truncate">M&amp;E Dashboard</p>
           </div>
         )}
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="md:hidden p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -76,6 +87,7 @@ export default function Sidebar() {
                 <Link
                   href={item.href}
                   title={collapsed ? item.label : undefined}
+                  onClick={onClose}
                   className={`
                     flex items-center gap-2.5 px-2.5 py-2 rounded text-sm font-medium
                     transition-colors select-none
@@ -102,7 +114,6 @@ export default function Sidebar() {
 
       {/* User + collapse */}
       <div className="border-t border-gray-200 flex-shrink-0">
-        {/* User info */}
         {user && (
           <div className={`px-3 py-2.5 flex items-center gap-2 ${collapsed ? 'justify-center' : ''}`}>
             <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
@@ -119,7 +130,6 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Logout */}
         <button
           onClick={logout}
           title="Sign out"
@@ -133,10 +143,10 @@ export default function Sidebar() {
           {!collapsed && <span>Sign Out</span>}
         </button>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — desktop only */}
         <button
           onClick={() => setCollapsed(v => !v)}
-          className="w-full flex items-center justify-center py-2 border-t border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+          className="hidden md:flex w-full items-center justify-center py-2 border-t border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
         >
           {collapsed
             ? <ChevronRight className="w-3.5 h-3.5" />
@@ -145,5 +155,26 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  )
+
+  return (
+    <>
+      {/* Desktop: inline sidebar */}
+      <div className="hidden md:flex h-screen">
+        {inner}
+      </div>
+
+      {/* Mobile: fixed drawer */}
+      <div
+        className={`
+          fixed inset-y-0 left-0 z-30 flex h-full
+          transition-transform duration-250 ease-in-out
+          md:hidden
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        {inner}
+      </div>
+    </>
   )
 }

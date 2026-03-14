@@ -306,10 +306,10 @@ export default function WorkplanPage() {
   const totalWeight = active?.kras.reduce((s, k) => s + k.weight, 0) ?? 0
 
   return (
-    <div className="flex gap-4 h-full min-h-0">
+    <div className="flex flex-col md:flex-row gap-4 md:h-full md:min-h-0">
 
       {/* ── Left panel: workplan list ──────────────────────────────────────── */}
-      <div className="w-60 flex-shrink-0 flex flex-col gap-2">
+      <div className="w-full md:w-60 md:flex-shrink-0 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Workplans</p>
           <button

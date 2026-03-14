@@ -1,11 +1,21 @@
 import { defineAuth } from "@aws-amplify/backend";
 
-/**
- * Define and configure your auth resource
- * @see https://docs.amplify.aws/gen2/build-a-backend/auth
- */
+// DICT M&E Dashboard – Auth configuration
+// Custom attributes mirror the ManagedUser type in types/index.ts
+// so that Cognito user attributes stay aligned with the dashboard's user model.
+
 export const auth = defineAuth({
   loginWith: {
     email: true,
+  },
+  userAttributes: {
+    "custom:role": {
+      dataType: "String",
+      mutable: true,
+    },
+    "custom:division": {
+      dataType: "String",
+      mutable: true,
+    },
   },
 });
