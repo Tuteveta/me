@@ -7,7 +7,6 @@ import { User, Mail, Building2, Lock, Save, CheckCircle2, AlertCircle, Eye, EyeO
 const ROLE_LABELS: Record<string, string> = {
   super:     'Super Admin',
   admin:     'M&E Manager',
-  officer:   'Officer',
   finance:   'Finance Manager',
   executive: 'Executive Manager',
   deputy:    'Deputy Secretary',
@@ -16,7 +15,6 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, string> = {
   super:     'bg-red-100 text-red-700',
   admin:     'bg-amber-100 text-amber-700',
-  officer:   'bg-blue-100 text-blue-700',
   finance:   'bg-emerald-100 text-emerald-700',
   executive: 'bg-purple-100 text-purple-700',
   deputy:    'bg-indigo-100 text-indigo-700',

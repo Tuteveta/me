@@ -7,7 +7,7 @@ import { Building2, Bell, Shield, Database, Save } from 'lucide-react'
 export default function SettingsPage() {
   const { user } = useAuth()
 
-  if (user && user.role === 'officer') {
+  if (user && user.role !== 'super' && user.role !== 'admin') {
     redirect('/dashboard')
   }
 
