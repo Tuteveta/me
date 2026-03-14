@@ -12,7 +12,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-3xl">
+    <div className="p-4 sm:p-6 space-y-4">
       <div>
         <h1 className="text-base font-bold text-gray-900">Settings</h1>
         <p className="text-xs text-gray-400 mt-0.5">System and notification configuration</p>

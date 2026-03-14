@@ -22,7 +22,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <TopBar onMenuOpen={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-5 page-enter">
+        <main className="flex-1 overflow-y-auto bg-gray-50 page-enter">
           {children}
         </main>
       </div>

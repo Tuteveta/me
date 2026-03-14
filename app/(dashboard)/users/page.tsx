@@ -24,7 +24,7 @@ function uid() {
 function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: ManagedUser) => void }) {
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
-  const [role, setRole]         = useState<UserRole>('officer')
+  const [role, setRole]         = useState<UserRole>('admin')
   const [division, setDivision] = useState(DIVISIONS[0])
   const [error, setError]       = useState('')
 
@@ -86,9 +86,11 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             <div>
               <label className={labelCls}>Role</label>
               <select className={inputCls} value={role} onChange={e => setRole(e.target.value as UserRole)}>
-                <option value="officer">Officer</option>
-                <option value="admin">Admin</option>
-                <option value="super">Super</option>
+                <option value="admin">M&E Manager</option>
+                <option value="executive">Executive Manager</option>
+                <option value="deputy">Deputy Secretary</option>
+                <option value="finance">Finance Manager</option>
+                <option value="super">Super Admin</option>
               </select>
             </div>
             <div>
@@ -101,9 +103,11 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
 
           {/* Role hint */}
           <div className="bg-gray-50 border border-gray-100 rounded px-3 py-2 text-[11px] text-gray-500">
-            {role === 'super'   && <><span className="font-bold text-red-700">Super:</span> Full access including user management and audit logs.</>}
-            {role === 'admin'   && <><span className="font-bold text-amber-700">Admin:</span> Project management, KPI oversight, and settings.</>}
-            {role === 'officer' && <><span className="font-bold text-blue-700">Officer:</span> View dashboards, submit reports, track assigned KPIs.</>}
+            {role === 'super'     && <><span className="font-bold text-red-700">Super Admin:</span> Full system access including user management and audit logs.</>}
+            {role === 'admin'     && <><span className="font-bold text-amber-700">M&E Manager:</span> Project management, KPI oversight, workplans, and funding requests.</>}
+            {role === 'executive' && <><span className="font-bold text-purple-700">Executive Manager:</span> First-level approval of M&E funding requests.</>}
+            {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy Secretary:</span> Second-level endorsement before Finance approval.</>}
+            {role === 'finance'   && <><span className="font-bold text-emerald-700">Finance Manager:</span> Reviews and approves programme funding; receives acquittal reports.</>}
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
@@ -123,9 +127,11 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
 }
 
 const ROLE_BADGE: Record<string, string> = {
-  super:   'bg-red-100 text-red-700',
-  admin:   'bg-amber-100 text-amber-700',
-  officer: 'bg-blue-100 text-blue-700',
+  super:     'bg-red-100 text-red-700',
+  admin:     'bg-amber-100 text-amber-700',
+  executive: 'bg-purple-100 text-purple-700',
+  deputy:    'bg-indigo-100 text-indigo-700',
+  finance:   'bg-emerald-100 text-emerald-700',
 }
 
 export default function UsersPage() {
@@ -137,7 +143,7 @@ export default function UsersPage() {
 
   const [users, setUsers]         = useState<ManagedUser[]>(MANAGED_USERS)
   const [search, setSearch]       = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'super' | 'admin' | 'officer'>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all')
   const [showModal, setShowModal] = useState(false)
 
   const filtered = users
@@ -159,7 +165,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
 
       {showModal && (
         <AddUserModal
@@ -198,7 +204,7 @@ export default function UsersPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'super', 'admin', 'officer'] as const).map(r => (
+          {(['all', 'super', 'admin', 'executive', 'deputy', 'finance'] as const).map(r => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -208,7 +214,12 @@ export default function UsersPage() {
                   : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
               }`}
             >
-              {r === 'all' ? `All (${users.length})` : `${r.charAt(0).toUpperCase() + r.slice(1)} (${users.filter(u => u.role === r).length})`}
+              {r === 'all' ? `All (${users.length})` :
+               r === 'admin' ? `M&E Mgr (${users.filter(u => u.role === r).length})` :
+               r === 'executive' ? `Exec. Mgr (${users.filter(u => u.role === r).length})` :
+               r === 'deputy' ? `Deputy Sec. (${users.filter(u => u.role === r).length})` :
+               r === 'finance' ? `Finance (${users.filter(u => u.role === r).length})` :
+               `${r.charAt(0).toUpperCase() + r.slice(1)} (${users.filter(u => u.role === r).length})`}
             </button>
           ))}
         </div>
@@ -277,18 +288,26 @@ export default function UsersPage() {
       {/* Role legend */}
       <div className="bg-blue-50 border border-blue-200 rounded-sm p-4">
         <p className="text-xs font-semibold text-blue-800 mb-2">Role Access Levels</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-blue-700">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
           <div>
-            <span className="font-bold text-red-700">Super</span>
+            <span className="font-bold text-red-700">Super Admin</span>
             <p className="text-[11px] text-gray-500 mt-0.5">Full system access including user management, settings, and audit logs.</p>
           </div>
           <div>
-            <span className="font-bold text-amber-700">Admin</span>
-            <p className="text-[11px] text-gray-500 mt-0.5">Project management, reporting, KPI oversight, and settings (no user mgmt).</p>
+            <span className="font-bold text-amber-700">M&E Manager</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Submits funding requests, manages workplans, projects, KPIs, and reports.</p>
           </div>
           <div>
-            <span className="font-bold text-blue-700">Officer</span>
-            <p className="text-[11px] text-gray-500 mt-0.5">View dashboards, submit reports, and track assigned KPIs.</p>
+            <span className="font-bold text-purple-700">Executive Manager</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">First-level approval of funding requests from the M&E Manager.</p>
+          </div>
+          <div>
+            <span className="font-bold text-indigo-700">Deputy Secretary</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Second-level endorsement of requests before Finance approval.</p>
+          </div>
+          <div>
+            <span className="font-bold text-emerald-700">Finance Manager</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Approves funding based on availability; receives acquittal reports.</p>
           </div>
         </div>
       </div>

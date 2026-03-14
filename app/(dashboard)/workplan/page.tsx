@@ -5,7 +5,7 @@ import { WORKPLANS } from '@/lib/mock-data/me-data'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
-  CheckCircle, Clock, FileEdit, Send, X,
+  CheckCircle, Clock, FileEdit, Send, X, ClipboardList,
 } from 'lucide-react'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -15,6 +15,11 @@ const STATUS_CFG: Record<WorkplanStatus, { label: string; badge: string }> = {
   approved:  { label: 'Approved',  badge: 'bg-emerald-50 text-emerald-700' },
   active:    { label: 'Active',    badge: 'bg-amber-50 text-amber-700' },
 }
+
+const DIVISIONS = [
+  'M&E Division', 'ICT Infrastructure', 'Digital Services',
+  'Policy & Planning', 'Cybersecurity', 'eGovernment Services', 'Capacity Building',
+]
 
 function uid() {
   return Math.random().toString(36).slice(2, 9)
@@ -26,6 +31,117 @@ function emptyKPI(): WorkplanKPI {
 
 function emptyKRA(): KRA {
   return { id: uid(), title: '', description: '', weight: 0, kpis: [emptyKPI()] }
+}
+
+// ── New Workplan Modal ─────────────────────────────────────────────────────────
+function NewWorkplanModal({
+  onClose, onCreate,
+}: {
+  onClose: () => void
+  onCreate: (wp: AnnualWorkplan) => void
+}) {
+  const [title, setTitle]       = useState('')
+  const [year, setYear]         = useState('FY 2025/26')
+  const [period, setPeriod]     = useState('Jul 2025 – Jun 2026')
+  const [division, setDivision] = useState(DIVISIONS[0])
+  const [budget, setBudget]     = useState('')
+  const [objective, setObjective] = useState('')
+  const [error, setError]       = useState('')
+
+  function handleSubmit(e: React.SyntheticEvent) {
+    e.preventDefault()
+    if (!title.trim()) { setError('Workplan title is required.'); return }
+    const wp: AnnualWorkplan = {
+      id: uid(),
+      title: title.trim(),
+      fiscalYear: year,
+      period,
+      division,
+      objective,
+      budget: parseFloat(budget.replace(/,/g, '')) || 0,
+      createdBy: 'Mary Kila',
+      status: 'draft',
+      createdAt: new Date().toISOString().split('T')[0],
+      kras: [emptyKRA()],
+    }
+    onCreate(wp)
+    onClose()
+  }
+
+  const inputCls = 'w-full border border-gray-200 rounded px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const labelCls = 'block text-[11px] font-semibold text-gray-600 mb-1'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-sm border border-gray-200 w-full max-w-lg shadow-lg">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">New Annual Workplan</h2>
+            <p className="text-[11px] text-gray-400 mt-0.5">Create a new M&E workplan for the fiscal year</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded">{error}</div>
+          )}
+
+          <div>
+            <label className={labelCls}>Workplan Title <span className="text-red-500">*</span></label>
+            <input className={inputCls} placeholder="e.g. Annual M&E Workplan 2025/26" value={title}
+              onChange={e => { setTitle(e.target.value); setError('') }} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Fiscal Year</label>
+              <input className={inputCls} placeholder="FY 2025/26" value={year} onChange={e => setYear(e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Period</label>
+              <input className={inputCls} placeholder="Jul 2025 – Jun 2026" value={period} onChange={e => setPeriod(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Division</label>
+              <select className={inputCls} value={division} onChange={e => setDivision(e.target.value)}>
+                {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Total Budget (PGK)</label>
+              <input type="number" min={0} className={inputCls} placeholder="0.00" value={budget} onChange={e => setBudget(e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Objective / Purpose</label>
+            <textarea rows={2} className={`${inputCls} resize-none`}
+              placeholder="Describe the overall objective of this workplan"
+              value={objective} onChange={e => setObjective(e.target.value)} />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Create Workplan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 // ── KPI Row ───────────────────────────────────────────────────────────────────
@@ -45,7 +161,7 @@ function KPIRow({
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50/50 align-top">
       <td className="px-3 py-2 text-[10px] text-gray-400 text-center w-7">{index + 1}</td>
-      <td className="px-2 py-2 min-w-[180px]">
+      <td className="px-2 py-2 min-w-45">
         {readOnly ? <span className={ro}>{kpi.name}</span>
           : <input className={cell} value={kpi.name} placeholder="KPI name" onChange={e => f('name', e.target.value)} />}
       </td>
@@ -67,11 +183,11 @@ function KPIRow({
         {readOnly ? <span className={`${ro} text-blue-700 font-bold`}>{kpi.annualTarget}</span>
           : <input className={`${cell} border-blue-300`} value={kpi.annualTarget} placeholder="0" onChange={e => f('annualTarget', e.target.value)} />}
       </td>
-      <td className="px-2 py-2 min-w-[120px]">
+      <td className="px-2 py-2 min-w-30">
         {readOnly ? <span className={ro}>{kpi.responsible}</span>
           : <input className={cell} value={kpi.responsible} placeholder="Officer name" onChange={e => f('responsible', e.target.value)} />}
       </td>
-      <td className="px-2 py-2 min-w-[140px]">
+      <td className="px-2 py-2 min-w-35">
         {readOnly ? <span className={ro}>{kpi.method}</span>
           : <input className={cell} value={kpi.method} placeholder="Measurement method" onChange={e => f('method', e.target.value)} />}
       </td>
@@ -87,6 +203,8 @@ function KPIRow({
 }
 
 // ── KRA Section ───────────────────────────────────────────────────────────────
+const KRA_COLORS = ['#3B82F6','#10B981','#D97706','#8B5CF6','#CE1126']
+
 function KRASection({
   kra, index, readOnly, onChange, onDelete,
 }: {
@@ -94,33 +212,25 @@ function KRASection({
   onChange: (k: KRA) => void; onDelete: () => void
 }) {
   const [open, setOpen] = useState(true)
-  const totalWeight = kra.weight
+  const color = KRA_COLORS[index % KRA_COLORS.length]
 
   function updateKPI(i: number, updated: WorkplanKPI) {
-    const kpis = [...kra.kpis]
-    kpis[i] = updated
-    onChange({ ...kra, kpis })
+    const kpis = [...kra.kpis]; kpis[i] = updated; onChange({ ...kra, kpis })
   }
 
   function deleteKPI(i: number) {
     onChange({ ...kra, kpis: kra.kpis.filter((_, idx) => idx !== i) })
   }
 
-  function addKPI() {
-    onChange({ ...kra, kpis: [...kra.kpis, emptyKPI()] })
-  }
-
-  const COLORS = ['#3B82F6','#10B981','#D97706','#8B5CF6','#CE1126']
-  const color  = COLORS[index % COLORS.length]
-
   return (
-    <div className="border border-gray-200 rounded-sm overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
       {/* KRA header */}
       <div
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+        style={{ borderLeft: `3px solid ${color}` }}
         onClick={() => setOpen(v => !v)}
       >
-        <div className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-black flex-shrink-0"
+        <div className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-black shrink-0"
           style={{ background: color }}>
           {index + 1}
         </div>
@@ -147,25 +257,28 @@ function KRASection({
           </div>
         )}
 
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Weight */}
+        <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-gray-400">Weight</span>
             {readOnly ? (
-              <span className="text-sm font-black" style={{ color }}>{totalWeight}%</span>
+              <span className="text-sm font-black" style={{ color }}>{kra.weight}%</span>
             ) : (
-              <input
-                type="number" min={0} max={100}
-                className="w-14 border border-gray-200 rounded px-2 py-1 text-xs text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-400"
-                value={kra.weight} placeholder="0"
-                onClick={e => e.stopPropagation()}
-                onChange={e => onChange({ ...kra, weight: Number(e.target.value) })}
-              />
+              <>
+                <input
+                  type="number" min={0} max={100}
+                  className="w-14 border border-gray-200 rounded px-2 py-1 text-xs text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  value={kra.weight} placeholder="0"
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => onChange({ ...kra, weight: Number(e.target.value) })}
+                />
+                <span className="text-[10px] text-gray-400">%</span>
+              </>
             )}
-            {!readOnly && <span className="text-[10px] text-gray-400">%</span>}
           </div>
 
-          <span className="text-[10px] text-gray-400">{kra.kpis.length} KPI{kra.kpis.length !== 1 ? 's' : ''}</span>
+          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+            {kra.kpis.length} KPI{kra.kpis.length !== 1 ? 's' : ''}
+          </span>
 
           {!readOnly && (
             <button
@@ -176,14 +289,17 @@ function KRASection({
             </button>
           )}
 
-          {open ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+          {open
+            ? <ChevronDown className="w-4 h-4 text-gray-400" />
+            : <ChevronRight className="w-4 h-4 text-gray-400" />
+          }
         </div>
       </div>
 
       {/* KPI table */}
       {open && (
         <div className="border-t border-gray-100 overflow-x-auto">
-          <table className="w-full text-xs min-w-[900px]">
+          <table className="w-full text-xs min-w-225">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-3 py-2 text-gray-400 font-medium w-7">#</th>
@@ -212,9 +328,9 @@ function KRASection({
           </table>
 
           {!readOnly && (
-            <div className="px-4 py-2.5 border-t border-gray-100">
+            <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40">
               <button
-                onClick={addKPI}
+                onClick={() => onChange({ ...kra, kpis: [...kra.kpis, emptyKPI()] })}
                 className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -233,16 +349,8 @@ export default function WorkplanPage() {
   const [workplans, setWorkplans] = useState<AnnualWorkplan[]>(WORKPLANS)
   const [activeId, setActiveId]   = useState<string | null>(workplans[0]?.id ?? null)
   const [editing, setEditing]     = useState(false)
-  const [showNew, setShowNew]     = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const [saved, setSaved]         = useState(false)
-
-  // New workplan form state
-  const [newTitle, setNewTitle]       = useState('')
-  const [newYear, setNewYear]         = useState('FY 2025/26')
-  const [newPeriod, setNewPeriod]     = useState('Jul 2025 – Jun 2026')
-  const [newDiv, setNewDiv]           = useState('')
-  const [newObjective, setNewObjective] = useState('')
-  const [newBudget, setNewBudget]     = useState('')
 
   const active = workplans.find(w => w.id === activeId) ?? null
 
@@ -252,19 +360,13 @@ export default function WorkplanPage() {
 
   function updateKRA(i: number, kra: KRA) {
     if (!active) return
-    const kras = [...active.kras]
-    kras[i] = kra
+    const kras = [...active.kras]; kras[i] = kra
     updateActive({ ...active, kras })
   }
 
   function deleteKRA(i: number) {
     if (!active) return
     updateActive({ ...active, kras: active.kras.filter((_, idx) => idx !== i) })
-  }
-
-  function addKRA() {
-    if (!active) return
-    updateActive({ ...active, kras: [...active.kras, emptyKRA()] })
   }
 
   function handleSave() {
@@ -279,107 +381,60 @@ export default function WorkplanPage() {
     setEditing(false)
   }
 
-  function createWorkplan() {
-    if (!newTitle.trim()) return
-    const wp: AnnualWorkplan = {
-      id: uid(),
-      title: newTitle,
-      fiscalYear: newYear,
-      period: newPeriod,
-      division: newDiv || 'M&E Division',
-      objective: newObjective,
-      budget: parseFloat(newBudget.replace(/,/g, '')) || 0,
-      createdBy: 'Mary Kila',
-      status: 'draft',
-      createdAt: new Date().toISOString().split('T')[0],
-      kras: [emptyKRA()],
-    }
+  function handleCreate(wp: AnnualWorkplan) {
     setWorkplans(prev => [wp, ...prev])
     setActiveId(wp.id)
     setEditing(true)
-    setShowNew(false)
-    setNewTitle('')
-    setNewObjective('')
-    setNewBudget('')
   }
 
   const totalWeight = active?.kras.reduce((s, k) => s + k.weight, 0) ?? 0
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 md:h-full md:min-h-0">
+    <div className="p-4 sm:p-6 flex flex-col md:flex-row gap-4 min-h-full">
+
+      {showModal && (
+        <NewWorkplanModal onClose={() => setShowModal(false)} onCreate={handleCreate} />
+      )}
 
       {/* ── Left panel: workplan list ──────────────────────────────────────── */}
-      <div className="w-full md:w-60 md:flex-shrink-0 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Workplans</p>
+      <div className="w-full md:w-64 md:shrink-0 flex flex-col gap-3">
+
+        {/* Panel header */}
+        <div className="bg-white border border-gray-200 rounded-sm px-4 py-3 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-gray-900">Workplans</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{workplans.length} plan{workplans.length !== 1 ? 's' : ''}</p>
+          </div>
           <button
-            onClick={() => setShowNew(v => !v)}
-            className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 bg-blue-700 text-white text-[11px] font-semibold px-3 py-1.5 rounded hover:bg-blue-800 transition-colors"
           >
             <Plus className="w-3 h-3" /> New
           </button>
         </div>
 
-        {/* New workplan form */}
-        {showNew && (
-          <div className="bg-white border border-blue-200 rounded-sm p-3 space-y-2">
-            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1">New Workplan</p>
-            <input
-              className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              placeholder="Workplan title *" value={newTitle} onChange={e => setNewTitle(e.target.value)}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input
-                className="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                placeholder="Fiscal year (e.g. FY 2025/26)" value={newYear} onChange={e => setNewYear(e.target.value)}
-              />
-              <input
-                className="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                placeholder="Period (e.g. Jul 2025 – Jun 2026)" value={newPeriod} onChange={e => setNewPeriod(e.target.value)}
-              />
-            </div>
-            <input
-              className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              placeholder="Division" value={newDiv} onChange={e => setNewDiv(e.target.value)}
-            />
-            <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-semibold">PGK</span>
-              <input
-                type="number" min={0}
-                className="w-full border border-gray-200 rounded pl-9 pr-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                placeholder="Total budget *" value={newBudget} onChange={e => setNewBudget(e.target.value)}
-              />
-            </div>
-            <textarea
-              rows={2}
-              className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
-              placeholder="Workplan objective / purpose" value={newObjective} onChange={e => setNewObjective(e.target.value)}
-            />
-            <div className="flex gap-2">
-              <button onClick={createWorkplan}
-                className="flex-1 bg-blue-700 text-white text-xs font-semibold py-1.5 rounded hover:bg-blue-800 transition-colors">
-                Create
-              </button>
-              <button onClick={() => setShowNew(false)}
-                className="px-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* List */}
-        <div className="space-y-1 overflow-y-auto">
+        <div className="space-y-1.5">
+          {workplans.length === 0 && (
+            <div className="bg-white border border-gray-200 rounded-sm px-4 py-6 text-center">
+              <p className="text-xs text-gray-400">No workplans yet.</p>
+              <button onClick={() => setShowModal(true)}
+                className="mt-2 text-[11px] text-blue-600 font-medium hover:underline">
+                Create the first one
+              </button>
+            </div>
+          )}
           {workplans.map(wp => {
             const cfg = STATUS_CFG[wp.status]
+            const isActive = activeId === wp.id
             return (
               <button
                 key={wp.id}
                 onClick={() => { setActiveId(wp.id); setEditing(false) }}
-                className={`w-full text-left px-3 py-3 rounded-sm border transition-colors ${
-                  activeId === wp.id
+                className={`w-full text-left px-4 py-3 rounded-sm border transition-colors ${
+                  isActive
                     ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50/60'
                 }`}
               >
                 <p className="text-xs font-bold text-gray-900 leading-tight truncate">{wp.title}</p>
@@ -387,7 +442,7 @@ export default function WorkplanPage() {
                   <span className="text-[10px] text-gray-400">{wp.fiscalYear}</span>
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-0.5">{wp.kras.length} KRAs</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{wp.division} · {wp.kras.length} KRA{wp.kras.length !== 1 ? 's' : ''}</p>
               </button>
             )
           })}
@@ -396,113 +451,139 @@ export default function WorkplanPage() {
 
       {/* ── Right panel: workplan detail ───────────────────────────────────── */}
       {active ? (
-        <div className="flex-1 min-w-0 flex flex-col gap-3 overflow-y-auto">
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
 
-          {/* Header */}
-          <div className="bg-white border border-gray-200 rounded-sm px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-base font-bold text-gray-900">{active.title}</h1>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CFG[active.status].badge}`}>
-                  {STATUS_CFG[active.status].label}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400 mb-2">
-                <span>{active.fiscalYear}{active.period ? ` · ${active.period}` : ''}</span>
-                <span>{active.division}</span>
-                <span>Created by {active.createdBy} · {active.createdAt}</span>
-                {active.approvedBy && <span>Approved by {active.approvedBy}</span>}
-                <span>{active.kras.length} KRAs · {active.kras.reduce((s, k) => s + k.kpis.length, 0)} KPIs</span>
-              </div>
-              {/* Budget + objective row */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded px-2.5 py-1">
-                  <span className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider">Budget</span>
-                  <span className="text-xs font-black text-emerald-700">
-                    PGK {active.budget > 0 ? active.budget.toLocaleString() : '—'}
+          {/* Page header card */}
+          <div className="bg-white border border-gray-200 rounded-sm px-5 py-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              {/* Title + meta */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-base font-bold text-gray-900 truncate">{active.title}</h1>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${STATUS_CFG[active.status].badge}`}>
+                    {STATUS_CFG[active.status].label}
                   </span>
                 </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-400">
+                  <span>{active.fiscalYear}{active.period ? ` · ${active.period}` : ''}</span>
+                  <span>{active.division}</span>
+                  <span>By {active.createdBy} · {active.createdAt}</span>
+                  {active.approvedBy && <span className="text-emerald-600 font-medium">Approved by {active.approvedBy}</span>}
+                </div>
+                {/* Budget + stats row */}
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                  <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded px-2.5 py-1 text-xs">
+                    <span className="text-emerald-600 font-semibold uppercase tracking-wider text-[10px]">Budget</span>
+                    <span className="font-black text-emerald-700">
+                      PGK {active.budget > 0 ? active.budget.toLocaleString() : '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded px-2.5 py-1 text-xs text-gray-500">
+                    <span>{active.kras.length} KRAs</span>
+                    <span className="text-gray-300">·</span>
+                    <span>{active.kras.reduce((s, k) => s + k.kpis.length, 0)} KPIs</span>
+                  </div>
+                  {/* Weight indicator */}
+                  <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border ${
+                    totalWeight === 100
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                  }`}>
+                    <span className="font-bold">Weight: {totalWeight}%</span>
+                    {totalWeight !== 100 && <span className="text-[10px]">(must = 100%)</span>}
+                  </div>
+                </div>
                 {active.objective && (
-                  <p className="text-[11px] text-gray-500 leading-snug max-w-xl italic">
-                    {active.objective}
-                  </p>
+                  <p className="text-[11px] text-gray-500 leading-snug mt-2 italic">{active.objective}</p>
                 )}
               </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {saved && (
-                <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                  <CheckCircle className="w-3.5 h-3.5" /> Saved
-                </span>
-              )}
+              {/* Action buttons */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {saved && (
+                  <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" /> Saved
+                  </span>
+                )}
 
-              {/* Weight indicator */}
-              <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border ${
-                totalWeight === 100 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-amber-200 bg-amber-50 text-amber-700'
-              }`}>
-                <span className="font-bold">Total weight: {totalWeight}%</span>
-                {totalWeight !== 100 && <span className="text-[10px]">(must = 100%)</span>}
+                {active.status === 'draft' && !editing && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="flex items-center gap-1.5 text-xs border border-gray-200 px-3 py-1.5 rounded text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    <FileEdit className="w-3.5 h-3.5" /> Edit
+                  </button>
+                )}
+
+                {editing && (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="flex items-center gap-1.5 text-xs bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-800 transition-colors"
+                    >
+                      <Save className="w-3.5 h-3.5" /> Save Draft
+                    </button>
+                    <button
+                      onClick={handleSubmit}
+                      disabled={totalWeight !== 100}
+                      className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Send className="w-3.5 h-3.5" /> Submit
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+
+                {active.status === 'submitted' && (
+                  <span className="flex items-center gap-1.5 text-xs text-blue-600 font-medium bg-blue-50 border border-blue-200 px-3 py-1.5 rounded">
+                    <Clock className="w-3.5 h-3.5" /> Awaiting approval
+                  </span>
+                )}
+
+                {active.status === 'approved' && (
+                  <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded">
+                    <CheckCircle className="w-3.5 h-3.5" /> Approved
+                  </span>
+                )}
               </div>
-
-              {active.status === 'draft' && !editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="flex items-center gap-1.5 text-xs border border-gray-200 px-3 py-1.5 rounded text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
-                >
-                  <FileEdit className="w-3.5 h-3.5" /> Edit
-                </button>
-              )}
-
-              {editing && (
-                <>
-                  <button
-                    onClick={handleSave}
-                    className="flex items-center gap-1.5 text-xs bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-800 transition-colors"
-                  >
-                    <Save className="w-3.5 h-3.5" /> Save
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={totalWeight !== 100}
-                    className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Send className="w-3.5 h-3.5" /> Submit
-                  </button>
-                  <button
-                    onClick={() => setEditing(false)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              {active.status === 'submitted' && (
-                <span className="flex items-center gap-1.5 text-xs text-blue-600 font-medium">
-                  <Clock className="w-3.5 h-3.5" /> Awaiting approval
-                </span>
-              )}
             </div>
           </div>
 
           {/* KRA list */}
-          <div className="space-y-2">
-            {active.kras.map((kra, i) => (
-              <KRASection
-                key={kra.id} kra={kra} index={i} readOnly={!editing}
-                onChange={updated => updateKRA(i, updated)}
-                onDelete={() => deleteKRA(i)}
-              />
-            ))}
-          </div>
+          {active.kras.length > 0 ? (
+            <div className="space-y-2">
+              {active.kras.map((kra, i) => (
+                <KRASection
+                  key={kra.id} kra={kra} index={i} readOnly={!editing}
+                  onChange={updated => updateKRA(i, updated)}
+                  onDelete={() => deleteKRA(i)}
+                />
+              ))}
+            </div>
+          ) : (
+            !editing && (
+              <div className="bg-white border border-gray-200 rounded-sm py-10 text-center">
+                <p className="text-sm text-gray-400">No Key Result Areas defined.</p>
+                {active.status === 'draft' && (
+                  <button onClick={() => setEditing(true)}
+                    className="mt-2 text-xs text-blue-600 font-medium hover:underline">
+                    Click Edit to add KRAs
+                  </button>
+                )}
+              </div>
+            )
+          )}
 
-          {/* Add KRA */}
+          {/* Add KRA button */}
           {editing && (
             <button
-              onClick={addKRA}
-              className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-sm py-3.5 text-sm text-gray-400 hover:border-blue-300 hover:text-blue-600 transition-colors"
+              onClick={() => updateActive({ ...active, kras: [...active.kras, emptyKRA()] })}
+              className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-sm py-4 text-sm text-gray-400 hover:border-blue-300 hover:text-blue-600 transition-colors bg-white"
             >
               <Plus className="w-4 h-4" />
               Add Key Result Area (KRA)
@@ -510,8 +591,20 @@ export default function WorkplanPage() {
           )}
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-          Select or create a workplan to get started.
+        <div className="flex-1 bg-white border border-gray-200 rounded-sm flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+            <ClipboardList className="w-6 h-6 text-gray-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-700">No workplan selected</p>
+            <p className="text-xs text-gray-400 mt-0.5">Select a workplan from the list or create a new one.</p>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-blue-800 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> New Workplan
+          </button>
         </div>
       )}
     </div>

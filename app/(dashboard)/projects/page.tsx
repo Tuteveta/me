@@ -37,7 +37,7 @@ export default function ProjectsPage() {
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.program.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

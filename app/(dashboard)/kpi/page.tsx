@@ -40,7 +40,7 @@ export default function KPIPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
 
       {/* Header + summary */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

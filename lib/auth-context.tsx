@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-export type UserRole = 'super' | 'admin' | 'officer'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy'
 
 export interface User {
   id: string
@@ -14,10 +14,18 @@ export interface User {
   lastLogin?: string
 }
 
+interface ProfileUpdate {
+  name: string
+  email: string
+  division: string
+}
+
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<UserRole | null>
   logout: () => void
+  updateProfile: (data: ProfileUpdate) => void
+  changePassword: (currentPassword: string, newPassword: string) => boolean
   isLoading: boolean
 }
 
@@ -39,12 +47,28 @@ const MOCK_USERS: (User & { password: string })[] = [
     division: 'M&E Division',
   },
   {
-    id: '3',
-    name: 'Peter Namaliu',
-    email: 'officer@dict.gov.pg',
+    id: '4',
+    name: 'Grace Temu',
+    email: 'finance@dict.gov.pg',
     password: 'dict@2025',
-    role: 'officer',
-    division: 'Digital Services',
+    role: 'finance',
+    division: 'Finance Division',
+  },
+  {
+    id: '5',
+    name: 'David Arua',
+    email: 'executive@dict.gov.pg',
+    password: 'dict@2025',
+    role: 'executive',
+    division: 'Executive Office',
+  },
+  {
+    id: '6',
+    name: 'Ruth Kanawi',
+    email: 'deputy@dict.gov.pg',
+    password: 'dict@2025',
+    role: 'deputy',
+    division: "Deputy Secretary's Office",
   },
 ]
 
@@ -65,15 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<UserRole | null> => {
     await new Promise(r => setTimeout(r, 600)) // simulate network
     const found = MOCK_USERS.find(u => u.email === email && u.password === password)
-    if (!found) return false
+    if (!found) return null
     const { password: _, ...u } = found
     const authed = { ...u, lastLogin: new Date().toISOString() }
     setUser(authed)
     localStorage.setItem('dict_me_user', JSON.stringify(authed))
-    return true
+    return authed.role
   }
 
   const logout = () => {
@@ -81,8 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('dict_me_user')
   }
 
+  const updateProfile = (data: ProfileUpdate) => {
+    if (!user) return
+    const updated = { ...user, ...data }
+    setUser(updated)
+    localStorage.setItem('dict_me_user', JSON.stringify(updated))
+  }
+
+  const changePassword = (currentPassword: string, _newPassword: string): boolean => {
+    if (!user) return false
+    const found = MOCK_USERS.find(u => u.id === user.id && u.password === currentPassword)
+    if (!found) return false
+    // Password update persists in-session only until backend integration
+    found.password = _newPassword
+    return true
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateProfile, changePassword, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

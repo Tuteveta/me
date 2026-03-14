@@ -32,16 +32,40 @@ const MOCK_USERS = [
     avatarBg: '#7C3AED',
   },
   {
-    name: 'Peter Namaliu',
-    role: 'Officer',
-    division: 'Digital Services',
-    email: 'officer@dict.gov.pg',
+    name: 'Grace Temu',
+    role: 'Finance',
+    division: 'Finance Division',
+    email: 'finance@dict.gov.pg',
     password: 'dict@2025',
-    roleColor: '#3B82F6',
-    roleBg: '#3B82F615',
-    desc: 'View dashboards, submit reports, track KPIs',
-    initials: 'PN',
-    avatarBg: '#059669',
+    roleColor: '#10B981',
+    roleBg: '#10B98115',
+    desc: 'Review and approve programme funding requests',
+    initials: 'GT',
+    avatarBg: '#0F766E',
+  },
+  {
+    name: 'David Arua',
+    role: 'Executive',
+    division: 'Executive Office',
+    email: 'executive@dict.gov.pg',
+    password: 'dict@2025',
+    roleColor: '#7C3AED',
+    roleBg: '#7C3AED15',
+    desc: 'First-level approval of M&E funding requests',
+    initials: 'DA',
+    avatarBg: '#7C3AED',
+  },
+  {
+    name: 'Ruth Kanawi',
+    role: 'Deputy',
+    division: "Deputy Secretary's Office",
+    email: 'deputy@dict.gov.pg',
+    password: 'dict@2025',
+    roleColor: '#4F46E5',
+    roleBg: '#4F46E515',
+    desc: 'Second-level endorsement before Finance approval',
+    initials: 'RK',
+    avatarBg: '#4F46E5',
   },
 ]
 
@@ -60,9 +84,9 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const ok = await login(email, password)
+    const role = await login(email, password)
     setLoading(false)
-    if (ok) {
+    if (role) {
       router.push('/dashboard')
     } else {
       setError('Invalid email or password. Please try again.')

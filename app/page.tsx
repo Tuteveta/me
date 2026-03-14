@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   BarChart3, ShieldCheck, Users, FileText, TrendingUp,
   ArrowRight, ChevronDown, CheckCircle2, Monitor,
+  ClipboardList, BadgeCheck, Banknote, Zap, LineChart, BookOpenCheck,
 } from 'lucide-react'
 
 /* ── Data ──────────────────────────────────────────────────────────────────── */
@@ -33,7 +35,7 @@ const FEATURES = [
   {
     icon: Users,
     title: 'Role-Based Access',
-    desc: 'Three access tiers — Super, Admin, and Officer — ensure data governance and accountability.',
+    desc: 'Five role tiers — Super, M&E Manager, Finance, Executive, and Deputy — ensure data governance and accountability.',
     color: '#CE1126',
   },
   {
@@ -53,7 +55,53 @@ const STATS = [
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
+  { label: 'How It Works', href: '#how-it-works' },
   { label: 'About',    href: '#about' },
+]
+
+const WORKFLOW = [
+  {
+    icon: ClipboardList,
+    step: '01',
+    title: 'Plan Submission',
+    desc: 'M&E Manager submits the annual programme plan with objectives, targets, and budget allocations.',
+    color: '#3B82F6',
+  },
+  {
+    icon: BadgeCheck,
+    step: '02',
+    title: 'Executive Approval',
+    desc: 'Executive Manager and Deputy review and approve programme objectives before activation.',
+    color: '#8B5CF6',
+  },
+  {
+    icon: Banknote,
+    step: '03',
+    title: 'Finance Approval',
+    desc: 'Finance Manager reviews and approves funding via a dedicated dashboard for financial oversight.',
+    color: '#10B981',
+  },
+  {
+    icon: Zap,
+    step: '04',
+    title: 'System Activation',
+    desc: 'System automatically activates KPI tracking and budget monitoring upon full approval.',
+    color: '#D97706',
+  },
+  {
+    icon: LineChart,
+    step: '05',
+    title: 'Live Monitoring',
+    desc: 'Dashboard tracks performance against targets and spending against allocations in real time.',
+    color: '#06B6D4',
+  },
+  {
+    icon: BookOpenCheck,
+    step: '06',
+    title: 'Evaluation Reports',
+    desc: 'Mid-year and end-year evaluation reports are auto-generated for review and distribution.',
+    color: '#CE1126',
+  },
 ]
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
@@ -65,15 +113,18 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-[1fr_auto_1fr] items-center gap-3">
 
-          {/* Left — title */}
-          <div className="leading-tight min-w-0">
-            <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none hidden sm:block">
-              Government of Papua New Guinea
-            </p>
-            <p className="text-sm font-bold text-gray-900 leading-tight truncate">
-              <span className="hidden sm:inline">Dept. of Information Communication &amp; Technology</span>
-              <span className="sm:hidden">DICT M&amp;E Dashboard</span>
-            </p>
+          {/* Left — logo + title */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Image src="/logo.png" alt="DICT Logo" width={40} height={40} className="shrink-0" />
+            <div className="leading-tight min-w-0">
+              <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none hidden sm:block">
+                Government of Papua New Guinea
+              </p>
+              <p className="text-sm font-bold text-gray-900 leading-tight truncate">
+                <span className="hidden sm:inline">Dept. of Information Communication &amp; Technology</span>
+                <span className="sm:hidden">DICT M&amp;E Dashboard</span>
+              </p>
+            </div>
           </div>
 
           {/* Center — nav */}
@@ -144,7 +195,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-1.5">
             {['Real-time project tracking', 'KPI target vs actual', 'Role-based access control'].map(item => (
               <span key={item} className="flex items-center gap-1.5 text-xs text-gray-400">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                 {item}
               </span>
             ))}
@@ -196,6 +247,40 @@ export default function LandingPage() {
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Works ───────────────────────────────────────────────────── */}
+      <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 mb-3">Workflow</p>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">How It Works</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              From plan submission to final evaluation — a structured, approval-gated process built for accountability.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {WORKFLOW.map((w, i) => (
+              <div key={w.step} className="relative bg-white border border-gray-200 rounded-lg p-6">
+                {/* Step number */}
+                <span className="text-[11px] font-bold tracking-widest uppercase mb-4 block" style={{ color: w.color }}>
+                  Step {w.step}
+                </span>
+                {/* Icon */}
+                <div className="inline-flex p-2.5 rounded mb-4" style={{ background: `${w.color}12`, border: `1px solid ${w.color}25` }}>
+                  <w.icon className="w-5 h-5" style={{ color: w.color }} />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">{w.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{w.desc}</p>
+                {/* Connector dot on all but last */}
+                {i < WORKFLOW.length - 1 && (
+                  <div className="hidden lg:flex absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-200 border-2 border-white z-10" />
+                )}
               </div>
             ))}
           </div>
@@ -273,7 +358,7 @@ export default function LandingPage() {
 
           <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
             <p className="text-xs">
-              © 2025 Department of Information Communication &amp; Technology, Government of Papua New Guinea.
+              © 2026 Department of Information Communication &amp; Technology, Government of Papua New Guinea.
             </p>
             <p className="text-xs text-gray-600">v1.0.0 · M&amp;E Build · FY 2024/25</p>
           </div>

@@ -1,4 +1,4 @@
-export type UserRole = 'super' | 'admin' | 'officer'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy'
 
 export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'delayed' | 'planned'
 export type KPIStatus = 'on-track' | 'at-risk' | 'off-track' | 'exceeded'
@@ -135,6 +135,52 @@ export interface AnnualWorkplan {
   status: WorkplanStatus
   createdAt: string
   kras: KRA[]
+}
+
+// ── Funding Requests (approval workflow) ──────────────────
+export type RequestStage =
+  | 'pending_em'
+  | 'pending_deputy'
+  | 'pending_finance'
+  | 'pending_acquittal'   // Finance approved — awaiting M&E acquittal report
+  | 'closed'             // Acquittal submitted — request fully closed
+  | 'rejected'
+
+export interface ApprovalEntry {
+  decision: 'approved' | 'rejected' | 'pending'
+  by?: string
+  at?: string
+  comment?: string
+}
+
+export interface RequestAttachment {
+  name: string
+  size: number   // bytes
+  type: string   // MIME type
+  url: string    // blob URL (session only) — replaced with real URL on backend integration
+}
+
+export interface AcquittalReport {
+  submittedAt: string
+  notes: string
+  attachments: RequestAttachment[]
+}
+
+export interface FundingRequest {
+  id: string
+  programme: string
+  description: string
+  amount: number
+  fiscalYear: string
+  submittedBy: string
+  submittedAt: string
+  stage: RequestStage
+  attachments: RequestAttachment[]
+  em: ApprovalEntry
+  deputy: ApprovalEntry
+  finance: ApprovalEntry
+  budgetLine?: string          // work plan KRA the Finance charged this to
+  acquittal?: AcquittalReport
 }
 
 // ── Users (Super-managed) ─────────────────────────────────

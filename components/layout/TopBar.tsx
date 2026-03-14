@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { Bell, RefreshCw, Menu } from 'lucide-react'
 
@@ -12,6 +13,10 @@ const BREADCRUMBS: Record<string, { label: string; parent?: string }> = {
   '/settings':  { label: 'Settings' },
   '/workplan':  { label: 'Annual Workplan' },
   '/users':     { label: 'User Management' },
+  '/requests':  { label: 'Funding Requests' },
+  '/approvals': { label: 'Approvals' },
+  '/finance':   { label: 'Finance' },
+  '/profile':   { label: 'My Profile' },
 }
 
 function useNow() {
@@ -81,17 +86,17 @@ export default function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
           <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500" />
         </button>
 
-        {/* User chip */}
+        {/* User chip — links to profile */}
         {user && (
-          <div className="flex items-center gap-2 pl-3 border-l border-gray-200 ml-1">
-            <div className="w-6 h-6 rounded-full bg-blue-700 flex items-center justify-center text-white text-[10px] font-black">
-              {user.name.charAt(0)}
+          <Link href="/profile" className="flex items-center gap-2 pl-3 border-l border-gray-200 ml-1 hover:opacity-80 transition-opacity">
+            <div className="w-6 h-6 rounded-full bg-blue-700 flex items-center justify-center text-white text-[10px] font-black shrink-0">
+              {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </div>
             <div className="hidden sm:block">
               <p className="text-[11px] font-semibold text-gray-900 leading-tight">{user.name.split(' ')[0]}</p>
               <p className="text-[9px] text-gray-400 capitalize leading-tight">{user.role}</p>
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </header>
