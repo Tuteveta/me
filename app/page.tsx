@@ -63,10 +63,10 @@ export default function LandingPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-[1fr_auto_1fr] items-center gap-3">
 
-          {/* Title only — no logo */}
-          <div className="leading-tight min-w-0 flex-1">
+          {/* Left — title */}
+          <div className="leading-tight min-w-0">
             <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none hidden sm:block">
               Government of Papua New Guinea
             </p>
@@ -76,7 +76,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Nav */}
+          {/* Center — nav */}
           <nav className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(l => (
               <a key={l.href} href={l.href}
@@ -86,14 +86,16 @@ export default function LandingPage() {
             ))}
           </nav>
 
-          {/* CTA */}
-          <Link
-            href="/auth/login"
-            className="flex items-center gap-2 bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded hover:bg-blue-800 transition-colors"
-          >
-            Sign In
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {/* Right — CTA */}
+          <div className="flex justify-end">
+            <Link
+              href="/auth/login"
+              className="flex items-center gap-2 bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded hover:bg-blue-800 transition-colors"
+            >
+              Sign In
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </header>
 
