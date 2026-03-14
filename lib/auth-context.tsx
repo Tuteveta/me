@@ -1,6 +1,11 @@
 'use client'
 
+import '@/lib/amplify'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import {
+  signIn, signOut, getCurrentUser, fetchUserAttributes,
+  updateUserAttributes, updatePassword,
+} from 'aws-amplify/auth'
 
 export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
 
@@ -10,123 +15,79 @@ export interface User {
   email: string
   role: UserRole
   division: string
-  avatar?: string
   lastLogin?: string
 }
 
-interface ProfileUpdate {
-  name: string
-  email: string
-  division: string
-}
+interface ProfileUpdate { name: string; email: string; division: string }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<UserRole | null>
   logout: () => void
-  updateProfile: (data: ProfileUpdate) => void
-  changePassword: (currentPassword: string, newPassword: string) => boolean
+  updateProfile: (data: ProfileUpdate) => Promise<void>
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>
   isLoading: boolean
 }
 
-const MOCK_USERS: (User & { password: string })[] = [
-  {
-    id: '1',
-    name: 'John Vele',
-    email: 'super@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'super',
-    division: 'ICT Infrastructure',
-  },
-  {
-    id: '2',
-    name: 'Mary Kila',
-    email: 'admin@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'admin',
-    division: 'M&E Division',
-  },
-  {
-    id: '4',
-    name: 'Grace Temu',
-    email: 'finance@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'finance',
-    division: 'Finance Division',
-  },
-  {
-    id: '5',
-    name: 'David Arua',
-    email: 'executive@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'executive',
-    division: 'Executive Office',
-  },
-  {
-    id: '6',
-    name: 'Ruth Kanawi',
-    email: 'deputy@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'deputy',
-    division: "Deputy Secretary's Office",
-  },
-  {
-    id: '7',
-    name: 'Peter Undi',
-    email: 'dcs@dict.gov.pg',
-    password: 'dict@2025',
-    role: 'dcs',
-    division: 'Corporate Services Division',
-  },
-]
-
 const AuthContext = createContext<AuthContextType | null>(null)
+
+async function loadCurrentUser(): Promise<User | null> {
+  try {
+    const { userId, username } = await getCurrentUser()
+    const attrs = await fetchUserAttributes()
+    return {
+      id: userId,
+      name: attrs.name ?? username,
+      email: attrs.email ?? username,
+      role: (attrs['custom:role'] as UserRole) ?? 'admin',
+      division: attrs['custom:division'] ?? '',
+      lastLogin: new Date().toISOString(),
+    }
+  } catch {
+    return null
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('dict_me_user')
-      if (stored) setUser(JSON.parse(stored))
-    } catch {
-      localStorage.removeItem('dict_me_user')
-    } finally {
+    loadCurrentUser().then(u => {
+      setUser(u)
       setIsLoading(false)
-    }
+    })
   }, [])
 
-  const login = async (email: string, password: string): Promise<UserRole | null> => {
-    await new Promise(r => setTimeout(r, 600)) // simulate network
-    const found = MOCK_USERS.find(u => u.email === email && u.password === password)
-    if (!found) return null
-    const { password: _, ...u } = found
-    const authed = { ...u, lastLogin: new Date().toISOString() }
-    setUser(authed)
-    localStorage.setItem('dict_me_user', JSON.stringify(authed))
-    return authed.role
+  const login = async (_email: string, _password: string): Promise<UserRole | null> => {
+    const u = await loadCurrentUser()
+    setUser(u)
+    return u?.role ?? null
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await signOut()
     setUser(null)
-    localStorage.removeItem('dict_me_user')
   }
 
-  const updateProfile = (data: ProfileUpdate) => {
-    if (!user) return
-    const updated = { ...user, ...data }
-    setUser(updated)
-    localStorage.setItem('dict_me_user', JSON.stringify(updated))
+  const updateProfile = async (data: ProfileUpdate) => {
+    await updateUserAttributes({
+      userAttributes: {
+        name: data.name,
+        email: data.email,
+        'custom:division': data.division,
+      },
+    })
+    setUser(prev => prev ? { ...prev, ...data } : prev)
   }
 
-  const changePassword = (currentPassword: string, _newPassword: string): boolean => {
-    if (!user) return false
-    const found = MOCK_USERS.find(u => u.id === user.id && u.password === currentPassword)
-    if (!found) return false
-    // Password update persists in-session only until backend integration
-    found.password = _newPassword
-    return true
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+    try {
+      await updatePassword({ oldPassword: currentPassword, newPassword })
+      return true
+    } catch {
+      return false
+    }
   }
 
   return (

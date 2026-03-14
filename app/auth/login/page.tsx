@@ -3,296 +3,222 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { signIn, confirmSignIn } from 'aws-amplify/auth'
+import Image from 'next/image'
 import Link from 'next/link'
-import { Eye, EyeOff, Shield, ChevronRight, ArrowLeft } from 'lucide-react'
-
-const MOCK_USERS = [
-  {
-    name: 'John Vele',
-    role: 'Super',
-    division: 'ICT Infrastructure',
-    email: 'super@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#CE1126',
-    roleBg: '#CE112615',
-    desc: 'Full system access — users, settings, all modules',
-    initials: 'JV',
-    avatarBg: '#1D4ED8',
-  },
-  {
-    name: 'Mary Kila',
-    role: 'Admin',
-    division: 'M&E Division',
-    email: 'admin@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#D97706',
-    roleBg: '#D9770615',
-    desc: 'Project management, reports, KPI oversight',
-    initials: 'MK',
-    avatarBg: '#7C3AED',
-  },
-  {
-    name: 'Grace Temu',
-    role: 'Finance',
-    division: 'Finance Division',
-    email: 'finance@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#10B981',
-    roleBg: '#10B98115',
-    desc: 'Review and approve programme funding requests',
-    initials: 'GT',
-    avatarBg: '#0F766E',
-  },
-  {
-    name: 'David Arua',
-    role: 'Executive',
-    division: 'Executive Office',
-    email: 'executive@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#7C3AED',
-    roleBg: '#7C3AED15',
-    desc: 'First-level approval of M&E funding requests',
-    initials: 'DA',
-    avatarBg: '#7C3AED',
-  },
-  {
-    name: 'Ruth Kanawi',
-    role: 'Deputy',
-    division: "Deputy Secretary's Office",
-    email: 'deputy@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#4F46E5',
-    roleBg: '#4F46E515',
-    desc: 'Second-level endorsement before DCS review',
-    initials: 'RK',
-    avatarBg: '#4F46E5',
-  },
-  {
-    name: 'Peter Undi',
-    role: 'DCS',
-    division: 'Corporate Services Division',
-    email: 'dcs@dict.gov.pg',
-    password: 'dict@2025',
-    roleColor: '#0F766E',
-    roleBg: '#0F766E15',
-    desc: 'Third-level review before Finance allocation',
-    initials: 'PU',
-    avatarBg: '#0F766E',
-  },
-]
+import { Eye, EyeOff, Shield, ArrowLeft, Lock } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
 
-  const [email, setEmail]     = useState('')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [showPw, setShowPw]   = useState(false)
-  const [error, setError]     = useState('')
-  const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<number | null>(null)
+  const [showPw, setShowPw]     = useState(false)
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
+
+  // New-password-required challenge state
+  const [needsNewPassword, setNeedsNewPassword] = useState(false)
+  const [newPassword, setNewPassword]           = useState('')
+  const [confirmPassword, setConfirmPassword]   = useState('')
+  const [showNew, setShowNew]                   = useState(false)
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const role = await login(email, password)
-    setLoading(false)
-    if (role) {
-      router.push('/dashboard')
-    } else {
-      setError('Invalid email or password. Please try again.')
+
+    try {
+      const { isSignedIn, nextStep } = await signIn({ username: email, password })
+
+      if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        setNeedsNewPassword(true)
+        setLoading(false)
+        return
+      }
+
+      if (isSignedIn) {
+        const role = await login(email, password)
+        if (role) router.push('/dashboard')
+        else setError('Account not configured. Contact your system administrator.')
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Sign in failed.'
+      setError(msg)
     }
+
+    setLoading(false)
   }
 
-  function selectUser(i: number) {
-    const u = MOCK_USERS[i]
-    setSelected(i)
-    setEmail(u.email)
-    setPassword(u.password)
+  async function handleNewPassword(e: React.SyntheticEvent) {
+    e.preventDefault()
     setError('')
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+    setLoading(true)
+    try {
+      await confirmSignIn({ challengeResponse: newPassword })
+      const role = await login(email, newPassword)
+      if (role) router.push('/dashboard')
+      else setError('Account not configured. Contact your system administrator.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to set new password.')
+    }
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
 
-      {/* Header text */}
-      <div className="text-center mb-8">
+      {/* Brand */}
+      <div className="flex flex-col items-center mb-8">
+        <Image src="/logo.png" alt="DICT Logo" width={56} height={56} className="mb-3" />
         <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase mb-1">
           Government of Papua New Guinea
         </p>
-        <h1 className="text-lg font-black text-gray-900">
+        <h1 className="text-lg font-black text-gray-900 text-center">
           Dept. of Information Communication &amp; Technology
         </h1>
         <p className="text-xs text-gray-400 mt-1">M&amp;E Dashboard — Secure Sign In</p>
       </div>
 
-      <div className="w-full max-w-2xl flex flex-col lg:flex-row gap-4">
+      <div className="w-full max-w-sm">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <div className="h-1 bg-blue-700" />
 
-        {/* ── Left: Mock user cards ─────────────────────────────────────── */}
-        <div className="lg:w-72 shrink-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
-            Demo Accounts
-          </p>
-          <div className="space-y-2">
-            {MOCK_USERS.map((u, i) => (
-              <button
-                key={u.email}
-                type="button"
-                onClick={() => selectUser(i)}
-                className={`
-                  w-full text-left bg-white border rounded-lg px-4 py-3.5 transition-all
-                  ${selected === i
-                    ? 'border-blue-500 ring-1 ring-blue-500'
-                    : 'border-gray-200 hover:border-gray-300'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0"
-                    style={{ background: u.avatarBg }}
-                  >
-                    {u.initials}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-bold text-gray-900 truncate">{u.name}</span>
-                      <span
-                        className="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{ color: u.roleColor, background: u.roleBg }}
-                      >
-                        {u.role}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 truncate">{u.division}</p>
-                    <p className="text-[10px] text-gray-400 truncate mt-0.5">{u.desc}</p>
-                  </div>
-
-                  <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected === i ? 'text-blue-500' : 'text-gray-300'}`} />
+          <div className="p-7">
+            {!needsNewPassword ? (
+              <>
+                <div className="flex items-center gap-2 mb-5">
+                  <Lock className="w-4 h-4 text-blue-700" />
+                  <p className="text-sm font-bold text-gray-900">Sign In</p>
                 </div>
 
-                {/* Email row */}
-                <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-gray-400">{u.email}</span>
-                  <span className="text-[10px] font-mono text-gray-300">dict@2025</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Right: Login form ─────────────────────────────────────────── */}
-        <div className="flex-1">
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden h-full">
-            <div className="h-1 bg-blue-700" />
-            <div className="p-7">
-
-              {/* Selected user indicator */}
-              {selected !== null && (
-                <div className="flex items-center gap-2.5 bg-blue-50 border border-blue-200 rounded px-3 py-2.5 mb-5">
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0"
-                    style={{ background: MOCK_USERS[selected].avatarBg }}
-                  >
-                    {MOCK_USERS[selected].initials}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-blue-900">{MOCK_USERS[selected].name}</p>
-                    <p className="text-[10px] text-blue-600">{MOCK_USERS[selected].division}</p>
-                  </div>
-                  <span
-                    className="ml-auto text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0"
-                    style={{ color: MOCK_USERS[selected].roleColor, background: MOCK_USERS[selected].roleBg }}
-                  >
-                    {MOCK_USERS[selected].role}
-                  </span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => { setEmail(e.target.value); setSelected(null) }}
-                    placeholder="you@dict.gov.pg"
-                    required
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Password
-                  </label>
-                  <div className="relative">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                      Email Address
+                    </label>
                     <input
-                      type={showPw ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@dict.gov.pg"
                       required
-                      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 transition-colors"
+                      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPw(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      tabIndex={-1}
-                    >
-                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPw ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 transition-colors"
+                      />
+                      <button type="button" onClick={() => setShowPw(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        tabIndex={-1}
+                      >
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded px-3 py-2.5">
+                      <Shield className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-red-700">{error}</p>
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={loading}
+                    className="w-full bg-blue-700 text-white font-semibold py-2.5 rounded text-sm hover:bg-blue-800 disabled:opacity-60 transition-colors"
+                  >
+                    {loading ? 'Signing in…' : 'Sign In to Dashboard'}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="mb-5">
+                  <p className="text-sm font-bold text-gray-900 mb-1">Set New Password</p>
+                  <p className="text-xs text-gray-500">Your account requires a new password before you can sign in.</p>
                 </div>
 
-                {error && (
-                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded px-3 py-2.5">
-                    <Shield className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-red-700">{error}</p>
+                <form onSubmit={handleNewPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showNew ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        required
+                        placeholder="Min 8 chars, upper, lower, number, symbol"
+                        className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      />
+                      <button type="button" onClick={() => setShowNew(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
+                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                )}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-700 text-white font-semibold py-2.5 rounded text-sm
-                    hover:bg-blue-800 active:bg-blue-900 disabled:opacity-60 disabled:cursor-not-allowed
-                    transition-colors"
-                >
-                  {loading ? 'Signing in…' : 'Sign In to Dashboard'}
-                </button>
-              </form>
+                  {error && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded px-3 py-2.5">
+                      <Shield className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-red-700">{error}</p>
+                    </div>
+                  )}
 
-              <p className="text-[10px] text-gray-400 text-center mt-6">
-                Select a demo account on the left, or enter credentials manually.
-              </p>
+                  <button type="submit" disabled={loading}
+                    className="w-full bg-blue-700 text-white font-semibold py-2.5 rounded text-sm hover:bg-blue-800 disabled:opacity-60 transition-colors"
+                  >
+                    {loading ? 'Setting password…' : 'Set Password & Sign In'}
+                  </button>
+                </form>
+              </>
+            )}
 
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link
-                  href="/"
-                  className="flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Back to Home
-                </Link>
-              </div>
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <Link href="/"
+                className="flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </Link>
             </div>
           </div>
         </div>
-      </div>
 
-      <p className="mt-6 text-xs text-gray-400 text-center">
-        Authorised DICT personnel only · Protected by GoPNG ICT Security Policy
-      </p>
+        <p className="mt-5 text-xs text-gray-400 text-center">
+          Authorised DICT personnel only · Protected by GoPNG ICT Security Policy
+        </p>
+        <p className="mt-1 text-xs text-gray-400 text-center">
+          Contact your system administrator to create or reset your account.
+        </p>
+      </div>
     </div>
   )
 }
