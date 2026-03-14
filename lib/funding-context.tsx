@@ -11,7 +11,7 @@ const SEED: FundingRequest[] = []
 interface FundingContextType {
   requests: FundingRequest[]
   submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) => void
-  decide: (id: string, stage: 'em' | 'deputy' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) => void
+  decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) => void
   submitAcquittal: (id: string, report: AcquittalReport) => void
 }
 
@@ -19,10 +19,11 @@ const FundingContext = createContext<FundingContextType | null>(null)
 
 const STORAGE_KEY = 'dict_funding_requests'
 
-function nextStage(current: 'em' | 'deputy' | 'finance', decision: 'approved' | 'rejected'): RequestStage {
+function nextStage(current: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected'): RequestStage {
   if (decision === 'rejected') return 'rejected'
   if (current === 'em')      return 'pending_deputy'
-  if (current === 'deputy')  return 'pending_finance'
+  if (current === 'deputy')  return 'pending_dcs'
+  if (current === 'dcs')     return 'pending_finance'
   // finance approved → awaiting acquittal report from M&E Manager
   return 'pending_acquittal'
 }
@@ -52,12 +53,13 @@ export function FundingProvider({ children }: { children: ReactNode }) {
       stage: 'pending_em',
       em:      { decision: 'pending' },
       deputy:  { decision: 'pending' },
+      dcs:     { decision: 'pending' },
       finance: { decision: 'pending' },
     }
     save([req, ...requests])
   }
 
-  function decide(id: string, stage: 'em' | 'deputy' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) {
+  function decide(id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) {
     const entry: ApprovalEntry = { decision, by, at: new Date().toISOString().slice(0, 10), comment }
     save(requests.map(r => r.id !== id ? r : {
       ...r,

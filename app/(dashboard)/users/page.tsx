@@ -89,6 +89,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
                 <option value="admin">M&E Manager</option>
                 <option value="executive">Executive Manager</option>
                 <option value="deputy">Deputy Secretary</option>
+                <option value="dcs">Dir. Corporate Services</option>
                 <option value="finance">Finance Manager</option>
                 <option value="super">Super Admin</option>
               </select>
@@ -132,6 +133,7 @@ const ROLE_BADGE: Record<string, string> = {
   executive: 'bg-purple-100 text-purple-700',
   deputy:    'bg-indigo-100 text-indigo-700',
   finance:   'bg-emerald-100 text-emerald-700',
+  dcs:       'bg-teal-100 text-teal-700',
 }
 
 export default function UsersPage() {
@@ -204,7 +206,7 @@ export default function UsersPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'super', 'admin', 'executive', 'deputy', 'finance'] as const).map(r => (
+          {(['all', 'super', 'admin', 'executive', 'deputy', 'dcs', 'finance'] as const).map(r => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -218,6 +220,7 @@ export default function UsersPage() {
                r === 'admin' ? `M&E Mgr (${users.filter(u => u.role === r).length})` :
                r === 'executive' ? `Exec. Mgr (${users.filter(u => u.role === r).length})` :
                r === 'deputy' ? `Deputy Sec. (${users.filter(u => u.role === r).length})` :
+               r === 'dcs' ? `Dir. Corp. (${users.filter(u => u.role === r).length})` :
                r === 'finance' ? `Finance (${users.filter(u => u.role === r).length})` :
                `${r.charAt(0).toUpperCase() + r.slice(1)} (${users.filter(u => u.role === r).length})`}
             </button>

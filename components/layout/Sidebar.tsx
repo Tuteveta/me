@@ -19,7 +19,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Overview',       href: '/dashboard', roles: ['super', 'admin', 'finance', 'executive', 'deputy'] },
+  { icon: LayoutDashboard, label: 'Overview',       href: '/dashboard', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
   { icon: FolderKanban,    label: 'Projects',        href: '/projects',  roles: ['super', 'admin'] },
   { icon: Target,          label: 'KPI Monitoring',  href: '/kpi',       roles: ['super', 'admin'] },
   { icon: FileText,        label: 'Reports',         href: '/reports',   roles: ['super', 'admin'] },
@@ -27,9 +27,9 @@ const NAV_ITEMS: NavItem[] = [
   { icon: Settings,        label: 'Settings',        href: '/settings',  roles: ['super', 'admin'] },
   { icon: Users,           label: 'User Management', href: '/users',     roles: ['super'] },
   { icon: SendHorizonal,   label: 'My Requests',     href: '/requests',  roles: ['admin'] },
-  { icon: BadgeCheck,      label: 'Approvals',       href: '/approvals', roles: ['executive', 'deputy'] },
+  { icon: BadgeCheck,      label: 'Approvals',       href: '/approvals', roles: ['executive', 'deputy', 'dcs'] },
   { icon: Banknote,        label: 'Finance',         href: '/finance',   roles: ['finance'] },
-  { icon: UserCircle,      label: 'My Profile',      href: '/profile',   roles: ['super', 'admin', 'finance', 'executive', 'deputy'] },
+  { icon: UserCircle,      label: 'My Profile',      href: '/profile',   roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
 ]
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -38,6 +38,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   finance:   'bg-emerald-100 text-emerald-700',
   executive: 'bg-purple-100 text-purple-700',
   deputy:    'bg-indigo-100 text-indigo-700',
+  dcs:       'bg-teal-100 text-teal-700',
 }
 
 const ROLE_DISPLAY: Record<UserRole, string> = {
@@ -46,6 +47,7 @@ const ROLE_DISPLAY: Record<UserRole, string> = {
   finance:   'Finance Manager',
   executive: 'Exec. Manager',
   deputy:    'Deputy Secretary',
+  dcs:       'Dir. Corporate Services',
 }
 
 interface SidebarProps {

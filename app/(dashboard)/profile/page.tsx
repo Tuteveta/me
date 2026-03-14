@@ -10,6 +10,7 @@ const ROLE_LABELS: Record<string, string> = {
   finance:   'Finance Manager',
   executive: 'Executive Manager',
   deputy:    'Deputy Secretary',
+  dcs:       'Dir. Corporate Services',
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -18,6 +19,7 @@ const ROLE_COLORS: Record<string, string> = {
   finance:   'bg-emerald-100 text-emerald-700',
   executive: 'bg-purple-100 text-purple-700',
   deputy:    'bg-indigo-100 text-indigo-700',
+  dcs:       'bg-teal-100 text-teal-700',
 }
 
 export default function ProfilePage() {
@@ -33,7 +35,7 @@ export default function ProfilePage() {
   const [pwSaved, setPwSaved] = useState(false)
   const [pwError, setPwError] = useState('')
 
-  function handleProfileSave(e: React.FormEvent) {
+  function handleProfileSave(e: React.SyntheticEvent) {
     e.preventDefault()
     setProfileError('')
     if (!profile.name.trim() || !profile.email.trim() || !profile.division.trim()) {
@@ -45,7 +47,7 @@ export default function ProfilePage() {
     setTimeout(() => setProfileSaved(false), 3000)
   }
 
-  function handlePasswordChange(e: React.FormEvent) {
+  function handlePasswordChange(e: React.SyntheticEvent) {
     e.preventDefault()
     setPwError('')
     setPwSaved(false)

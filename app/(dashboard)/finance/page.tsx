@@ -25,8 +25,9 @@ function ApprovalTrail({ req }: { req: FundingRequest }) {
   return (
     <div className="flex gap-4 mt-3">
       {[
-        { label: 'Exec. Manager', entry: req.em },
-        { label: 'Deputy Sec.',   entry: req.deputy },
+        { label: 'Exec. Manager',  entry: req.em },
+        { label: 'Deputy Sec.',    entry: req.deputy },
+        { label: 'Dir. Corp. Svc', entry: req.dcs },
       ].map(s => (
         <div key={s.label} className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />

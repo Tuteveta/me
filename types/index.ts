@@ -1,4 +1,4 @@
-export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
 
 export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'delayed' | 'planned'
 export type KPIStatus = 'on-track' | 'at-risk' | 'off-track' | 'exceeded'
@@ -141,6 +141,7 @@ export interface AnnualWorkplan {
 export type RequestStage =
   | 'pending_em'
   | 'pending_deputy'
+  | 'pending_dcs'         // Director Corporate Services review
   | 'pending_finance'
   | 'pending_acquittal'   // Finance approved — awaiting M&E acquittal report
   | 'closed'             // Acquittal submitted — request fully closed
@@ -178,6 +179,7 @@ export interface FundingRequest {
   attachments: RequestAttachment[]
   em: ApprovalEntry
   deputy: ApprovalEntry
+  dcs: ApprovalEntry           // Director Corporate Services
   finance: ApprovalEntry
   budgetLine?: string          // work plan KRA the Finance charged this to
   acquittal?: AcquittalReport

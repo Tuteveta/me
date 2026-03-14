@@ -14,11 +14,12 @@ import { AttachmentList } from '@/app/(dashboard)/requests/page'
 const fmt = (n: number) =>
   n >= 1_000_000 ? `K${(n / 1_000_000).toFixed(2)}M` : `K${(n / 1_000).toFixed(0)}K`
 
-function TrackerBar({ req, highlightStage }: { req: FundingRequest; highlightStage: 'em' | 'deputy' }) {
+function TrackerBar({ req, highlightStage }: { req: FundingRequest; highlightStage: 'em' | 'deputy' | 'dcs' }) {
   const steps = [
     { key: 'em' as const,      label: 'Exec. Manager', entry: req.em },
     { key: 'deputy' as const,  label: 'Deputy Sec.',   entry: req.deputy },
-    { key: 'finance' as const, label: 'Finance',        entry: req.finance },
+    { key: 'dcs' as const,     label: 'Dir. Corp.',    entry: req.dcs },
+    { key: 'finance' as const, label: 'Finance',       entry: req.finance },
   ]
   return (
     <div className="flex items-center gap-0 mt-3">
@@ -56,7 +57,7 @@ function RequestCard({
   req, stage, onDecide,
 }: {
   req: FundingRequest
-  stage: 'em' | 'deputy'
+  stage: 'em' | 'deputy' | 'dcs'
   onDecide: (id: string, decision: 'approved' | 'rejected', comment: string) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -115,6 +116,16 @@ function RequestCard({
               </div>
             </div>
           )}
+          {/* Prior comment from Deputy (shown to DCS) */}
+          {stage === 'dcs' && req.deputy.comment && (
+            <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded p-3">
+              <AlertTriangle className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-semibold text-blue-700">Deputy Secretary Note</p>
+                <p className="text-xs text-blue-600 mt-0.5">{req.deputy.comment}</p>
+              </div>
+            </div>
+          )}
 
           {!alreadyDecided && (
             <>
@@ -159,11 +170,11 @@ function RequestCard({
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function ApprovalsPage() {
   const { user } = useAuth()
-  if (user && user.role !== 'executive' && user.role !== 'deputy') redirect('/dashboard')
+  if (user && user.role !== 'executive' && user.role !== 'deputy' && user.role !== 'dcs') redirect('/dashboard')
 
   const { requests, decide } = useFunding()
-  const stage = user?.role === 'executive' ? 'em' : 'deputy'
-  const stageFilter = stage === 'em' ? 'pending_em' : 'pending_deputy'
+  const stage = user?.role === 'executive' ? 'em' : user?.role === 'dcs' ? 'dcs' : 'deputy'
+  const stageFilter = stage === 'em' ? 'pending_em' : stage === 'dcs' ? 'pending_dcs' : 'pending_deputy'
 
   const pending  = requests.filter(r => r.stage === stageFilter)
   const decided  = requests.filter(r => r[stage].decision !== 'pending')
@@ -179,12 +190,14 @@ export default function ApprovalsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-black text-gray-900">
-          {stage === 'em' ? 'Executive Manager' : 'Deputy Secretary'} — Approvals
+          {stage === 'em' ? 'Executive Manager' : stage === 'deputy' ? 'Deputy Secretary' : 'Director Corporate Services'} — Approvals
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
           {stage === 'em'
             ? 'Review funding requests submitted by the M&E Manager'
-            : 'Review requests endorsed by the Executive Manager'}
+            : stage === 'deputy'
+            ? 'Review requests endorsed by the Executive Manager'
+            : 'Review requests endorsed by the Deputy Secretary before Finance allocation'}
         </p>
       </div>
 

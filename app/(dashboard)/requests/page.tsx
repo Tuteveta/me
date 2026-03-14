@@ -26,17 +26,19 @@ function fileIcon(type: string) {
 }
 
 const STAGE_META: Record<RequestStage, { label: string; color: string; bg: string; border: string }> = {
-  pending_em:         { label: 'Awaiting Exec. Manager',  color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
-  pending_deputy:     { label: 'Awaiting Deputy Sec.',    color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-200' },
-  pending_finance:    { label: 'Awaiting Finance',        color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200' },
-  pending_acquittal:  { label: 'Submit Acquittal Report', color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
-  closed:             { label: 'Closed',                  color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  rejected:           { label: 'Rejected',                color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200' },
+  pending_em:         { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  pending_deputy:     { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-200' },
+  pending_dcs:        { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
+  pending_finance:    { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200' },
+  pending_acquittal:  { label: 'Submit Acquittal Report',      color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
+  closed:             { label: 'Closed',                       color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  rejected:           { label: 'Rejected',                     color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200' },
 }
 
 const STAGE_ICON: Record<RequestStage, React.ElementType> = {
   pending_em:        Clock,
   pending_deputy:    Clock,
+  pending_dcs:       Clock,
   pending_finance:   Clock,
   pending_acquittal: BookOpenCheck,
   closed:            Lock,
@@ -76,7 +78,7 @@ export function AttachmentList({ attachments }: { attachments: RequestAttachment
               className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded px-2.5 py-1.5 transition-colors group"
             >
               <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
-              <span className="text-xs text-gray-700 group-hover:text-blue-700 max-w-[160px] truncate">{a.name}</span>
+              <span className="text-xs text-gray-700 group-hover:text-blue-700 max-w-40 truncate">{a.name}</span>
               <span className="text-[10px] text-gray-400">{fmtBytes(a.size)}</span>
             </a>
           )
@@ -89,17 +91,16 @@ export function AttachmentList({ attachments }: { attachments: RequestAttachment
 /* ── Tracker bar ───────────────────────────────────────────────────────────── */
 function TrackerBar({ req }: { req: FundingRequest }) {
   const steps = [
-    { key: 'em',      label: 'Exec. Manager', entry: req.em },
-    { key: 'deputy',  label: 'Deputy Sec.',   entry: req.deputy },
-    { key: 'finance', label: 'Finance',        entry: req.finance },
+    { key: 'em',        label: 'Exec. Manager', entry: req.em },
+    { key: 'deputy',    label: 'Deputy Sec.',   entry: req.deputy },
+    { key: 'dcs',       label: 'Dir. Corp.',    entry: req.dcs },
+    { key: 'finance',   label: 'Finance',       entry: req.finance },
     {
       key: 'acquittal',
       label: 'Acquittal',
       entry: req.acquittal
         ? { decision: 'approved' as const, at: req.acquittal.submittedAt }
-        : req.stage === 'pending_acquittal'
-          ? { decision: 'pending' as const }
-          : { decision: 'pending' as const },
+        : { decision: 'pending' as const },
     },
   ] as const
 

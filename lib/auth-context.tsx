@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
 
 export interface User {
   id: string
@@ -69,6 +69,14 @@ const MOCK_USERS: (User & { password: string })[] = [
     password: 'dict@2025',
     role: 'deputy',
     division: "Deputy Secretary's Office",
+  },
+  {
+    id: '7',
+    name: 'Peter Undi',
+    email: 'dcs@dict.gov.pg',
+    password: 'dict@2025',
+    role: 'dcs',
+    division: 'Corporate Services Division',
   },
 ]
 

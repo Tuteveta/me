@@ -63,9 +63,21 @@ const MOCK_USERS = [
     password: 'dict@2025',
     roleColor: '#4F46E5',
     roleBg: '#4F46E515',
-    desc: 'Second-level endorsement before Finance approval',
+    desc: 'Second-level endorsement before DCS review',
     initials: 'RK',
     avatarBg: '#4F46E5',
+  },
+  {
+    name: 'Peter Undi',
+    role: 'DCS',
+    division: 'Corporate Services Division',
+    email: 'dcs@dict.gov.pg',
+    password: 'dict@2025',
+    roleColor: '#0F766E',
+    roleBg: '#0F766E15',
+    desc: 'Third-level review before Finance allocation',
+    initials: 'PU',
+    avatarBg: '#0F766E',
   },
 ]
 
@@ -80,7 +92,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<number | null>(null)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -118,7 +130,7 @@ export default function LoginPage() {
       <div className="w-full max-w-2xl flex flex-col lg:flex-row gap-4">
 
         {/* ── Left: Mock user cards ─────────────────────────────────────── */}
-        <div className="lg:w-72 flex-shrink-0">
+        <div className="lg:w-72 shrink-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
             Demo Accounts
           </p>
@@ -139,7 +151,7 @@ export default function LoginPage() {
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0"
                     style={{ background: u.avatarBg }}
                   >
                     {u.initials}
@@ -150,7 +162,7 @@ export default function LoginPage() {
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-sm font-bold text-gray-900 truncate">{u.name}</span>
                       <span
-                        className="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        className="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
                         style={{ color: u.roleColor, background: u.roleBg }}
                       >
                         {u.role}
@@ -160,7 +172,7 @@ export default function LoginPage() {
                     <p className="text-[10px] text-gray-400 truncate mt-0.5">{u.desc}</p>
                   </div>
 
-                  <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-colors ${selected === i ? 'text-blue-500' : 'text-gray-300'}`} />
+                  <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected === i ? 'text-blue-500' : 'text-gray-300'}`} />
                 </div>
 
                 {/* Email row */}
@@ -183,7 +195,7 @@ export default function LoginPage() {
               {selected !== null && (
                 <div className="flex items-center gap-2.5 bg-blue-50 border border-blue-200 rounded px-3 py-2.5 mb-5">
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-black flex-shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0"
                     style={{ background: MOCK_USERS[selected].avatarBg }}
                   >
                     {MOCK_USERS[selected].initials}
@@ -193,7 +205,7 @@ export default function LoginPage() {
                     <p className="text-[10px] text-blue-600">{MOCK_USERS[selected].division}</p>
                   </div>
                   <span
-                    className="ml-auto text-[9px] font-black uppercase px-2 py-0.5 rounded-full flex-shrink-0"
+                    className="ml-auto text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0"
                     style={{ color: MOCK_USERS[selected].roleColor, background: MOCK_USERS[selected].roleBg }}
                   >
                     {MOCK_USERS[selected].role}
@@ -244,7 +256,7 @@ export default function LoginPage() {
 
                 {error && (
                   <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded px-3 py-2.5">
-                    <Shield className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                    <Shield className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                     <p className="text-xs text-red-700">{error}</p>
                   </div>
                 )}
