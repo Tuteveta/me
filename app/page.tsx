@@ -117,10 +117,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3 min-w-0">
             <Image src="/logo.png" alt="DICT Logo" width={40} height={40} className="shrink-0" />
             <div className="leading-tight min-w-0">
-              <p className="text-[10px] font-semibold text-blue-700 tracking-widest uppercase leading-none hidden sm:block">
-                Government of Papua New Guinea
-              </p>
-              <p className="text-sm font-bold text-gray-900 leading-tight truncate">
+<p className="text-sm font-bold text-gray-900 leading-tight truncate">
                 Monitoring &amp; Evaluation
               </p>
             </div>
