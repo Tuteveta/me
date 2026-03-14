@@ -143,24 +143,34 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero — centered ────────────────────────────────────────────────── */}
-      <section className="pt-16 px-4 sm:px-6 bg-white">
-        <div className="max-w-2xl mx-auto w-full py-10 sm:py-14 text-center">
+      <section
+        className="relative pt-16"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gray-950/70" />
+
+        <div className="relative z-10 max-w-2xl mx-auto w-full px-4 sm:px-6 py-16 sm:py-24 text-center">
 
           {/* Live badge */}
-          <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 status-dot-live" />
-            <span className="text-blue-700 text-xs font-semibold tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-5 backdrop-blur-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 status-dot-live" />
+            <span className="text-blue-300 text-xs font-semibold tracking-wider uppercase">
               M&amp;E Dashboard · FY 2024/25
             </span>
           </div>
 
           <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-4">
-            <span className="text-gray-900">ICT Monitoring </span>
-            <span className="text-blue-700">&amp; Evaluation</span>
-            <span className="text-gray-900"> Dashboard</span>
+            <span className="text-white">ICT Monitoring </span>
+            <span className="text-blue-400">&amp; Evaluation</span>
+            <span className="text-white"> Dashboard</span>
           </h1>
 
-          <p className="text-gray-500 text-base leading-relaxed mb-7 max-w-lg mx-auto">
+          <p className="text-gray-300 text-base leading-relaxed mb-7 max-w-lg mx-auto">
             A single pane of glass to monitor, evaluate, and optimise all ICT
             programs across Papua New Guinea.
           </p>
@@ -169,14 +179,14 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-7">
             <Link
               href="/auth/login"
-              className="flex items-center justify-center gap-2 bg-blue-700 text-white font-bold px-6 py-2.5 rounded hover:bg-blue-800 transition-colors text-sm"
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold px-6 py-2.5 rounded hover:bg-blue-700 transition-colors text-sm"
             >
               Access Dashboard
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
               href="#features"
-              className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded hover:border-gray-400 transition-colors text-sm"
+              className="flex items-center justify-center gap-2 border border-white/30 text-white font-medium px-6 py-2.5 rounded hover:bg-white/10 transition-colors text-sm"
             >
               Explore Features
               <ChevronDown className="w-4 h-4" />
@@ -187,7 +197,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-1.5">
             {['Real-time project tracking', 'KPI target vs actual', 'Role-based access control'].map(item => (
               <span key={item} className="flex items-center gap-1.5 text-xs text-gray-400">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 {item}
               </span>
             ))}
