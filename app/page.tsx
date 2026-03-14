@@ -111,38 +111,34 @@ export default function LandingPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
 
           {/* Left — logo + title */}
-          <div className="flex items-center gap-3 min-w-0">
-            <Image src="/logo.png" alt="DICT Logo" width={40} height={40} className="shrink-0" />
-            <div className="leading-tight min-w-0">
-<p className="text-sm font-bold text-gray-900 leading-tight truncate">
-                Monitoring &amp; Evaluation
-              </p>
-            </div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Image src="/logo.png" alt="DICT Logo" width={36} height={36} className="shrink-0" />
+            <p className="text-sm font-bold text-gray-900 leading-tight truncate">
+              Monitoring &amp; Evaluation
+            </p>
           </div>
 
-          {/* Center — nav */}
+          {/* Center — nav (desktop only) */}
           <nav className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(l => (
               <a key={l.href} href={l.href}
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">
                 {l.label}
               </a>
             ))}
           </nav>
 
           {/* Right — CTA */}
-          <div className="flex justify-end">
-            <Link
-              href="/auth/login"
-              className="flex items-center gap-2 bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded hover:bg-blue-800 transition-colors"
-            >
-              Sign In
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link
+            href="/auth/login"
+            className="flex items-center gap-2 bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded hover:bg-blue-800 transition-colors shrink-0"
+          >
+            Sign In
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </header>
 
