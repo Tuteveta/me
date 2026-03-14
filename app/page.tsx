@@ -121,8 +121,7 @@ export default function LandingPage() {
                 Government of Papua New Guinea
               </p>
               <p className="text-sm font-bold text-gray-900 leading-tight truncate">
-                <span className="hidden sm:inline">Dept. of Information Communication &amp; Technology</span>
-                <span className="sm:hidden">DICT M&amp;E Dashboard</span>
+                Monitoring &amp; Evaluation
               </p>
             </div>
           </div>
