@@ -41,7 +41,7 @@ export default function KPICard({
         <p className="text-xs font-medium text-gray-500 leading-tight">{label}</p>
         {Icon && (
           <div
-            className="p-1.5 rounded flex-shrink-0"
+            className="p-1.5 rounded shrink-0"
             style={{ background: color ? `${color}15` : '#3B82F615' }}
           >
             <Icon className="w-3.5 h-3.5" style={{ color: color ?? '#3B82F6' }} />
