@@ -153,14 +153,25 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats ──────────────────────────────────────────────────────────── */}
-      <section className="bg-gray-50 border-y border-gray-200 py-10 sm:py-14">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-          {STATS.map(s => (
-            <div key={s.label} className="text-center">
-              <div className="text-4xl font-black text-blue-700 mb-1">{s.value}</div>
-              <div className="text-sm text-gray-500">{s.label}</div>
-            </div>
-          ))}
+      <section className="bg-gray-50 border-y border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4">
+            {STATS.map((s, i) => (
+              <div
+                key={s.label}
+                className={[
+                  'text-center py-10 sm:py-14 px-4 border-gray-200',
+                  i < STATS.length - 1
+                    ? i % 2 === 0 ? 'border-r' : 'md:border-r'
+                    : '',
+                  i < 2 ? 'border-b md:border-b-0' : '',
+                ].join(' ')}
+              >
+                <div className="text-4xl font-black text-blue-700 mb-1">{s.value}</div>
+                <div className="text-sm text-gray-500">{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
