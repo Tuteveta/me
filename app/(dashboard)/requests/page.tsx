@@ -200,7 +200,7 @@ function FileUploadZone({
 /* ── Acquittal submission form ─────────────────────────────────────────────── */
 function AcquittalForm({ req, onSubmit }: {
   req: FundingRequest
-  onSubmit: (notes: string, attachments: RequestAttachment[]) => void
+  onSubmit: (notes: string, attachments: RequestAttachment[]) => Promise<void>
 }) {
   const [notes, setNotes]   = useState('')
   const [files, setFiles]   = useState<RequestAttachment[]>([])
@@ -211,8 +211,7 @@ function AcquittalForm({ req, onSubmit }: {
     e.preventDefault()
     if (!notes.trim()) { setError('Please provide acquittal notes describing the use of funds.'); return }
     setBusy(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSubmit(notes, files)
+    await onSubmit(notes, files)
     setBusy(false)
   }
 
@@ -292,8 +291,7 @@ export default function RequestsPage() {
     e.preventDefault()
     if (!user) return
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 400))
-    submit({
+    await submit({
       programme:   form.programme,
       description: form.description,
       amount:      parseFloat(form.amount),
@@ -317,8 +315,8 @@ export default function RequestsPage() {
     setFiles(prev => { URL.revokeObjectURL(prev[i].url); return prev.filter((_, idx) => idx !== i) })
   }
 
-  function handleAcquittal(id: string, notes: string, attachments: RequestAttachment[]) {
-    submitAcquittal(id, {
+  async function handleAcquittal(id: string, notes: string, attachments: RequestAttachment[]) {
+    await submitAcquittal(id, {
       notes,
       attachments,
       submittedAt: new Date().toISOString().slice(0, 10),

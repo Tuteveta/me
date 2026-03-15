@@ -46,7 +46,7 @@ function ApprovalTrail({ req }: { req: FundingRequest }) {
 function RequestCard({ req, kraOptions, onDecide }: {
   req: FundingRequest
   kraOptions: string[]
-  onDecide: (id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) => void
+  onDecide: (id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) => Promise<void>
 }) {
   const [open, setOpen]           = useState(false)
   const [comment, setComment]     = useState('')
@@ -61,8 +61,7 @@ function RequestCard({ req, kraOptions, onDecide }: {
       return
     }
     setDeciding(true)
-    await new Promise(r => setTimeout(r, 300))
-    onDecide(req.id, decision, comment, budgetLine)
+    await onDecide(req.id, decision, comment, budgetLine)
     setDeciding(false)
   }
 
@@ -293,9 +292,9 @@ export default function FinancePage() {
     })
   )
 
-  function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) {
+  async function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) {
     if (!user) return
-    decide(id, 'finance', decision, user.name, comment || undefined, budgetLine || undefined)
+    await decide(id, 'finance', decision, user.name, comment || undefined, budgetLine || undefined)
   }
 
   return (

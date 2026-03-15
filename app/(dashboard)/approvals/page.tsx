@@ -58,7 +58,7 @@ function RequestCard({
 }: {
   req: FundingRequest
   stage: 'em' | 'deputy' | 'dcs'
-  onDecide: (id: string, decision: 'approved' | 'rejected', comment: string) => void
+  onDecide: (id: string, decision: 'approved' | 'rejected', comment: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
@@ -66,8 +66,7 @@ function RequestCard({
 
   async function handle(decision: 'approved' | 'rejected') {
     setDeciding(true)
-    await new Promise(r => setTimeout(r, 300))
-    onDecide(req.id, decision, comment)
+    await onDecide(req.id, decision, comment)
     setDeciding(false)
   }
 
@@ -179,9 +178,9 @@ export default function ApprovalsPage() {
   const pending  = requests.filter(r => r.stage === stageFilter)
   const decided  = requests.filter(r => r[stage].decision !== 'pending')
 
-  function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string) {
+  async function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string) {
     if (!user) return
-    decide(id, stage, decision, user.name, comment || undefined)
+    await decide(id, stage, decision, user.name, comment || undefined)
   }
 
   return (
