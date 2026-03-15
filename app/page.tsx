@@ -146,7 +146,7 @@ export default function LandingPage() {
       <section
         className="relative pt-16"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80)',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
