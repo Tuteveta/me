@@ -29,23 +29,27 @@ function fileIcon(type: string) {
 }
 
 const STAGE_META: Record<RequestStage, { label: string; color: string; bg: string; border: string }> = {
-  pending_em:         { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
-  pending_deputy:     { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-200' },
-  pending_dcs:        { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
-  pending_finance:    { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200' },
-  pending_acquittal:  { label: 'Submit Acquittal Report',      color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
-  closed:             { label: 'Closed',                       color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  rejected:           { label: 'Rejected',                     color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200' },
+  pending_em:               { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  pending_deputy:           { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-200' },
+  pending_dcs:              { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
+  pending_finance:          { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200' },
+  pending_acquittal:        { label: 'Submit Acquittal Report',      color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
+  pending_acquittal_review: { label: 'Acquittal Under Review',       color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
+  closed:                   { label: 'Closed',                       color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  rejected:                 { label: 'Rejected',                     color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200' },
+  deferred:                 { label: 'On Hold / Deferred',           color: 'text-yellow-700',  bg: 'bg-yellow-50',  border: 'border-yellow-200' },
 }
 
 const STAGE_ICON: Record<RequestStage, React.ElementType> = {
-  pending_em:        Clock,
-  pending_deputy:    Clock,
-  pending_dcs:       Clock,
-  pending_finance:   Clock,
-  pending_acquittal: BookOpenCheck,
-  closed:            Lock,
-  rejected:          XCircle,
+  pending_em:               Clock,
+  pending_deputy:           Clock,
+  pending_dcs:              Clock,
+  pending_finance:          Clock,
+  pending_acquittal:        BookOpenCheck,
+  pending_acquittal_review: BookOpenCheck,
+  closed:                   Lock,
+  rejected:                 XCircle,
+  deferred:                 Clock,
 }
 
 const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip'

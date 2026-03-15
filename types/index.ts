@@ -141,14 +141,16 @@ export interface AnnualWorkplan {
 export type RequestStage =
   | 'pending_em'
   | 'pending_deputy'
-  | 'pending_dcs'         // Director Corporate Services review
+  | 'pending_dcs'
   | 'pending_finance'
-  | 'pending_acquittal'   // Finance approved — awaiting M&E acquittal report
-  | 'closed'             // Acquittal submitted — request fully closed
+  | 'pending_acquittal'
+  | 'pending_acquittal_review'  // NEW: Finance reviewing submitted acquittal
+  | 'closed'
   | 'rejected'
+  | 'deferred'                  // NEW: Request on hold by an approver
 
 export interface ApprovalEntry {
-  decision: 'approved' | 'rejected' | 'pending'
+  decision: 'approved' | 'rejected' | 'pending' | 'deferred'
   by?: string
   at?: string
   comment?: string
@@ -183,6 +185,7 @@ export interface FundingRequest {
   finance: ApprovalEntry
   budgetLine?: string          // work plan KRA the Finance charged this to
   acquittal?: AcquittalReport
+  deferredFromStage?: string    // NEW: the stage it was at when deferred
 }
 
 // ── Users (Super-managed) ─────────────────────────────────

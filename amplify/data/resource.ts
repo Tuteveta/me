@@ -21,8 +21,10 @@ const schema = a.schema({
     'pending_dcs',
     'pending_finance',
     'pending_acquittal',
+    'pending_acquittal_review',
     'closed',
     'rejected',
+    'deferred',
   ]),
 
   ProgramArea: a.enum([
@@ -174,6 +176,7 @@ const schema = a.schema({
       submittedAt:          a.string().required(),
       stage:                a.ref('RequestStage').required(),
       budgetLine:           a.string(),
+      deferredFromStage:    a.string(),
       // Approval decisions (serialised JSON: ApprovalEntry)
       emDecision:           a.string(),
       deputyDecision:       a.string(),

@@ -17,6 +17,9 @@ interface FundingContextType {
   submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) => Promise<void>
   decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) => Promise<void>
   submitAcquittal: (id: string, report: AcquittalReport) => Promise<void>
+  defer: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', by: string, reason: string, deferredFromStage: RequestStage) => Promise<void>
+  resumeDeferred: (id: string) => Promise<void>
+  closeRequest: (id: string, _by: string, _comment?: string) => Promise<void>
 }
 
 const FundingContext = createContext<FundingContextType | null>(null)
@@ -59,6 +62,7 @@ function transform(item: Record<string, unknown>): FundingRequest {
       notes:        (item.acquittalNotes as string) ?? '',
       attachments:  parseArr<RequestAttachment>(item.acquittalAttachments),
     } : undefined,
+    deferredFromStage: item.deferredFromStage as string | undefined,
   }
 }
 
@@ -115,7 +119,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
   async function submitAcquittal(id: string, report: AcquittalReport) {
     await (client.models as any).FundingRequest.update({
       id,
-      stage:               'closed' as RequestStage,
+      stage:               'pending_acquittal_review' as RequestStage,
       acquittalNotes:      report.notes,
       acquittalSubmittedAt: report.submittedAt,
       acquittalAttachments: JSON.stringify(report.attachments),
@@ -123,8 +127,60 @@ export function FundingProvider({ children }: { children: ReactNode }) {
     await load()
   }
 
+  async function defer(id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', by: string, reason: string, deferredFromStage: RequestStage) {
+    const entry: ApprovalEntry = { decision: 'deferred', by, at: new Date().toISOString().slice(0, 10), comment: reason }
+    const fieldMap = { em: 'emDecision', deputy: 'deputyDecision', dcs: 'dcsDecision', finance: 'financeDecision' }
+    const { errors } = await (client.models as any).FundingRequest.update({
+      id,
+      [fieldMap[stage]]: JSON.stringify(entry),
+      stage: 'deferred' as RequestStage,
+      deferredFromStage: deferredFromStage as string,
+    })
+    if (errors?.length) throw new Error(errors[0].message)
+    await load()
+  }
+
+  async function resumeDeferred(id: string) {
+    // fetch current item to get deferredFromStage
+    const { data: item } = await (client.models as any).FundingRequest.get({ id })
+    if (!item) throw new Error('Request not found')
+    const restoreStage = (item.deferredFromStage as RequestStage) ?? 'pending_em'
+    // find which approver's decision is 'deferred' and reset it to pending
+    const pendingEntry: ApprovalEntry = { decision: 'pending' }
+    const updates: Record<string, unknown> = {
+      id,
+      stage: restoreStage,
+      deferredFromStage: null,
+    }
+    const fieldPairs: Array<[string, string]> = [
+      ['emDecision', 'em'],
+      ['deputyDecision', 'deputy'],
+      ['dcsDecision', 'dcs'],
+      ['financeDecision', 'finance'],
+    ]
+    for (const [field] of fieldPairs) {
+      try {
+        const entry = JSON.parse(item[field] ?? '{}') as ApprovalEntry
+        if (entry.decision === 'deferred') updates[field] = JSON.stringify(pendingEntry)
+      } catch { /* ignore */ }
+    }
+    const { errors } = await (client.models as any).FundingRequest.update(updates)
+    if (errors?.length) throw new Error(errors[0].message)
+    await load()
+  }
+
+  async function closeRequest(id: string, _by: string, _comment?: string) {
+    // keep financeDecision as-is (already approved earlier), just close the stage
+    const { errors } = await (client.models as any).FundingRequest.update({
+      id,
+      stage: 'closed' as RequestStage,
+    })
+    if (errors?.length) throw new Error(errors[0].message)
+    await load()
+  }
+
   return (
-    <FundingContext.Provider value={{ requests, isLoading, reload: load, submit, decide, submitAcquittal }}>
+    <FundingContext.Provider value={{ requests, isLoading, reload: load, submit, decide, submitAcquittal, defer, resumeDeferred, closeRequest }}>
       {children}
     </FundingContext.Provider>
   )

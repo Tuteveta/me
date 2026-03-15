@@ -9,6 +9,7 @@ import {
   Banknote, CheckCircle2, XCircle, Clock, AlertTriangle,
   ChevronDown, ChevronUp, FileText, TrendingUp, BarChart3,
   BookOpenCheck, Lock, ClipboardList, ArrowRight, Plus,
+  PauseCircle, RefreshCw,
 } from 'lucide-react'
 import type { FundingRequest } from '@/types'
 import { useWorkplan } from '@/lib/workplan-context'
@@ -43,17 +44,23 @@ function ApprovalTrail({ req }: { req: FundingRequest }) {
 }
 
 /* ── Pending request card ──────────────────────────────────────────────────── */
-function RequestCard({ req, kraOptions, onDecide }: {
+function RequestCard({ req, kraOptions, onDecide, onDefer }: {
   req: FundingRequest
   kraOptions: string[]
   onDecide: (id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) => Promise<void>
+  onDefer: (id: string, reason: string) => Promise<void>
 }) {
   const [open, setOpen]           = useState(false)
   const [comment, setComment]     = useState('')
   const [budgetLine, setBudgetLine] = useState('')
   const [deciding, setDeciding]   = useState(false)
+  const [showDefer, setShowDefer] = useState(false)
+  const [deferReason, setDeferReason] = useState('')
+  const [deferring, setDeferring] = useState(false)
+  const [deferError, setDeferError] = useState('')
 
-  const decided = req.finance.decision !== 'pending'
+  const decided = req.finance.decision === 'approved' || req.finance.decision === 'rejected'
+  const isDeferred = req.finance.decision === 'deferred'
 
   async function handle(decision: 'approved' | 'rejected') {
     if (decision === 'rejected' && !comment.trim()) {
@@ -63,6 +70,13 @@ function RequestCard({ req, kraOptions, onDecide }: {
     setDeciding(true)
     await onDecide(req.id, decision, comment, budgetLine)
     setDeciding(false)
+  }
+
+  async function handleDefer() {
+    if (!deferReason.trim()) { setDeferError('Please provide a reason for deferring.'); return }
+    setDeferring(true)
+    await onDefer(req.id, deferReason)
+    setDeferring(false)
   }
 
   return (
@@ -75,9 +89,14 @@ function RequestCard({ req, kraOptions, onDecide }: {
           <p className="text-sm font-semibold text-gray-900 truncate">{req.programme}</p>
           <div className="flex flex-wrap gap-2 mt-1">
             <span className="text-xs text-gray-400">{req.submittedBy} · {req.submittedAt} · {req.fiscalYear}</span>
-            {!decided && (
+            {!decided && !isDeferred && (
               <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded uppercase">
                 Awaiting Decision
+              </span>
+            )}
+            {isDeferred && (
+              <span className="text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded uppercase flex items-center gap-1">
+                <PauseCircle className="w-3 h-3" /> On Hold
               </span>
             )}
             {req.budgetLine && (
@@ -104,13 +123,37 @@ function RequestCard({ req, kraOptions, onDecide }: {
           <AttachmentList attachments={req.attachments ?? []} />
 
           <div>
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Prior Approvals</p>
-            <ApprovalTrail req={req} />
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Approval Chain</p>
+            <div className="flex flex-wrap gap-3 mt-2">
+              {[
+                { label: 'Exec. Manager',  entry: req.em },
+                { label: 'Deputy Sec.',    entry: req.deputy },
+                { label: 'Dir. Corp. Svc', entry: req.dcs },
+              ].map(s => (
+                <div key={s.label} className="flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-600">{s.label}</p>
+                    <p className="text-[10px] text-gray-400">{s.entry.by} · {s.entry.at}</p>
+                    {s.entry.comment && <p className="text-[10px] text-gray-400 italic">"{s.entry.comment}"</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {!decided && (
+          {isDeferred && (
+            <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-3">
+              <PauseCircle className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-yellow-800">Deferred by {req.finance.by} on {req.finance.at}</p>
+                {req.finance.comment && <p className="text-xs text-yellow-700 mt-0.5">{req.finance.comment}</p>}
+              </div>
+            </div>
+          )}
+
+          {!decided && !isDeferred && (
             <div className="space-y-3 pt-2 border-t border-gray-100">
-              {/* Budget line selector */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                   Charge to Work Plan Budget Line
@@ -134,7 +177,6 @@ function RequestCard({ req, kraOptions, onDecide }: {
                   </div>
                 )}
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                   Funding Decision Notes
@@ -148,16 +190,39 @@ function RequestCard({ req, kraOptions, onDecide }: {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => handle('approved')} disabled={deciding}
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handle('approved')} disabled={deciding || deferring}
                   className="flex items-center gap-1.5 bg-green-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-green-700 disabled:opacity-60 transition-colors">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Approve Funding
                 </button>
-                <button onClick={() => handle('rejected')} disabled={deciding}
+                <button onClick={() => handle('rejected')} disabled={deciding || deferring}
                   className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60 transition-colors">
                   <XCircle className="w-3.5 h-3.5" /> Reject
                 </button>
+                <button onClick={() => { setShowDefer(v => !v); setDeferError('') }} disabled={deciding || deferring}
+                  className="flex items-center gap-1.5 bg-yellow-500 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-60 transition-colors">
+                  <PauseCircle className="w-3.5 h-3.5" /> Defer / Hold
+                </button>
               </div>
+
+              {showDefer && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-yellow-800">Defer this request</p>
+                  {deferError && <p className="text-xs text-red-600">{deferError}</p>}
+                  <textarea
+                    rows={2}
+                    placeholder="Reason for deferring…"
+                    value={deferReason}
+                    onChange={e => { setDeferReason(e.target.value); setDeferError('') }}
+                    className="w-full border border-yellow-300 rounded px-3 py-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none bg-white"
+                  />
+                  <button onClick={handleDefer} disabled={deferring}
+                    className="flex items-center gap-1.5 bg-yellow-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-yellow-700 disabled:opacity-60 transition-colors">
+                    <PauseCircle className="w-3.5 h-3.5" />
+                    {deferring ? 'Deferring…' : 'Confirm Defer'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -252,30 +317,158 @@ function ClosedCard({ req }: { req: FundingRequest }) {
   )
 }
 
+/* ── Acquittal review card ─────────────────────────────────────────────────── */
+function AcquittalReviewCard({ req, onClose }: {
+  req: FundingRequest
+  onClose: (id: string, comment: string) => Promise<void>
+}) {
+  const [open, setOpen]       = useState(true)
+  const [comment, setComment] = useState('')
+  const [closing, setClosing] = useState(false)
+
+  async function handle() {
+    setClosing(true)
+    await onClose(req.id, comment)
+    setClosing(false)
+  }
+
+  return (
+    <div className="bg-white border border-teal-200 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full text-left px-4 py-4 flex items-start gap-3 hover:bg-teal-50 transition-colors"
+      >
+        <BookOpenCheck className="w-4 h-4 text-teal-600 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{req.programme}</p>
+          <div className="flex flex-wrap gap-2 mt-1">
+            <span className="text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 rounded uppercase">
+              Acquittal Submitted — Review Required
+            </span>
+            <span className="text-xs text-gray-400">{req.submittedBy} · {req.fiscalYear}</span>
+          </div>
+        </div>
+        <p className="text-sm font-black text-gray-900 shrink-0">{fmt(req.amount)}</p>
+        {open
+          ? <ChevronUp className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+        }
+      </button>
+
+      {open && (
+        <div className="px-4 pb-5 border-t border-teal-100 space-y-3">
+          {/* Original request */}
+          <div className="flex items-start gap-2 bg-gray-50 rounded p-3 mt-3">
+            <FileText className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Original Request</p>
+              <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
+            </div>
+          </div>
+
+          <AttachmentList attachments={req.attachments ?? []} />
+
+          {/* Approval chain summary */}
+          <div>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Approval Chain</p>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { label: 'Exec. Manager',  entry: req.em },
+                { label: 'Deputy Sec.',    entry: req.deputy },
+                { label: 'Dir. Corp. Svc', entry: req.dcs },
+              ].map(s => (
+                <div key={s.label} className="flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-600">{s.label}</p>
+                    <p className="text-[10px] text-gray-400">{s.entry.by} · {s.entry.at}</p>
+                    {s.entry.comment && <p className="text-[10px] text-gray-400 italic">"{s.entry.comment}"</p>}
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-start gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-600">Finance</p>
+                  <p className="text-[10px] text-gray-400">{req.finance.by} · {req.finance.at}</p>
+                  {req.finance.comment && <p className="text-[10px] text-gray-400 italic">"{req.finance.comment}"</p>}
+                  {req.budgetLine && <p className="text-[10px] text-blue-600 font-semibold">{req.budgetLine}</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Acquittal report */}
+          {req.acquittal && (
+            <div className="border border-teal-200 rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-teal-50 border-b border-teal-200">
+                <BookOpenCheck className="w-3.5 h-3.5 text-teal-600" />
+                <p className="text-xs font-bold text-teal-800 uppercase tracking-wide">
+                  Acquittal Report · Submitted {req.acquittal.submittedAt}
+                </p>
+              </div>
+              <div className="px-4 py-3 space-y-2">
+                <p className="text-xs text-gray-700 leading-relaxed">{req.acquittal.notes}</p>
+                <AttachmentList attachments={req.acquittal.attachments} />
+              </div>
+            </div>
+          )}
+
+          {/* Close action */}
+          <div className="pt-2 border-t border-gray-100 space-y-3">
+            <p className="text-xs font-semibold text-gray-700">Finance Sign-off to Close Request</p>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                Closing Notes <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Any notes on the acquittal review…"
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              />
+            </div>
+            <button
+              onClick={handle}
+              disabled={closing}
+              className="flex items-center gap-1.5 bg-teal-600 text-white text-xs font-semibold px-5 py-2 rounded hover:bg-teal-700 disabled:opacity-60 transition-colors"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              {closing ? 'Closing…' : 'Confirm & Close Request'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function FinancePage() {
   const { user } = useAuth()
   if (user && user.role !== 'finance') redirect('/dashboard')
 
-  const { requests, decide } = useFunding()
+  const { requests, decide, defer, resumeDeferred, closeRequest } = useFunding()
   const { workplans } = useWorkplan()
 
-  const inbox    = requests.filter(r => r.stage === 'pending_finance')
-  const approved = requests.filter(r => r.finance.decision === 'approved' && r.stage !== 'closed')
-  const rejected = requests.filter(r => r.finance.decision === 'rejected')
-  const closed   = requests.filter(r => r.stage === 'closed')
-  const totalPending  = inbox.reduce((s, r) => s + r.amount, 0)
-  const totalApproved = [...approved, ...closed].reduce((s, r) => s + r.amount, 0)
-  const totalAcquitted = closed.reduce((s, r) => s + r.amount, 0)
+  const inbox           = requests.filter(r => r.stage === 'pending_finance')
+  const approved        = requests.filter(r => r.finance.decision === 'approved' && r.stage !== 'closed' && r.stage !== 'pending_acquittal_review')
+  const acquittalReview = requests.filter(r => r.stage === 'pending_acquittal_review')
+  const rejected        = requests.filter(r => r.finance.decision === 'rejected')
+  const closed          = requests.filter(r => r.stage === 'closed')
+  const totalPending    = inbox.reduce((s, r) => s + r.amount, 0)
+  const totalApproved   = [...approved, ...closed, ...acquittalReview].reduce((s, r) => s + r.amount, 0)
+  const totalAcquitted  = closed.reduce((s, r) => s + r.amount, 0)
 
   // Finance's own work plans + KRA budget lines for the dropdown
-  const financeWorkplans = workplans  // Finance sees all plans; filter by division if needed
+  const financeWorkplans = workplans
   const kraOptions = financeWorkplans.flatMap(wp =>
     wp.kras.map(k => `${wp.fiscalYear} › ${k.title || 'Untitled KRA'}`)
   )
 
   // Group approved/closed requests by division (submitter) for allocation overview
-  const byDivision = [...approved, ...closed].reduce<Record<string, { amount: number; count: number; acquitted: number }>>((acc, r) => {
+  const byDivision = [...approved, ...closed, ...acquittalReview].reduce<Record<string, { amount: number; count: number; acquitted: number }>>((acc, r) => {
     const div = r.programme
     if (!acc[div]) acc[div] = { amount: 0, count: 0, acquitted: 0 }
     acc[div].amount += r.amount
@@ -288,7 +481,7 @@ export default function FinancePage() {
   const kraUtilisation = financeWorkplans.flatMap(wp =>
     wp.kras.map(k => {
       const label = `${wp.fiscalYear} › ${k.title || 'Untitled KRA'}`
-      const committed = [...approved, ...closed].filter(r => r.budgetLine === label).reduce((s, r) => s + r.amount, 0)
+      const committed = [...approved, ...closed, ...acquittalReview].filter(r => r.budgetLine === label).reduce((s, r) => s + r.amount, 0)
       return { label, budget: wp.budget / Math.max(wp.kras.length, 1), committed }
     })
   )
@@ -296,6 +489,18 @@ export default function FinancePage() {
   async function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) {
     if (!user) return
     await decide(id, 'finance', decision, user.name, comment || undefined, budgetLine || undefined)
+  }
+
+  async function handleDefer(id: string, reason: string) {
+    if (!user) return
+    const req = requests.find(r => r.id === id)
+    if (!req) return
+    await defer(id, 'finance', user.name, reason, req.stage)
+  }
+
+  async function handleClose(id: string, comment: string) {
+    if (!user) return
+    await closeRequest(id, user.name, comment || undefined)
   }
 
   return (
@@ -322,7 +527,7 @@ export default function FinancePage() {
             <Clock className="w-4 h-4 text-amber-600" />
             <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Pending</span>
           </div>
-          <p className="text-2xl font-black text-amber-700">{inbox.length}</p>
+          <p className="text-2xl font-black text-amber-700">{inbox.length + acquittalReview.length}</p>
           <p className="text-xs text-amber-600 mt-0.5">{fmt(totalPending)} awaiting decision</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -330,7 +535,7 @@ export default function FinancePage() {
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Committed</span>
           </div>
-          <p className="text-2xl font-black text-green-700">{approved.length + closed.length}</p>
+          <p className="text-2xl font-black text-green-700">{approved.length + closed.length + acquittalReview.length}</p>
           <p className="text-xs text-green-600 mt-0.5">{fmt(totalApproved)} approved</p>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
@@ -366,7 +571,7 @@ export default function FinancePage() {
                 </span>
               </div>
               {inbox.map(req => (
-                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} />
+                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} onDefer={handleDefer} />
               ))}
             </div>
           )}
@@ -381,7 +586,25 @@ export default function FinancePage() {
                 </span>
               </div>
               {approved.map(req => (
-                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} />
+                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} onDefer={handleDefer} />
+              ))}
+            </div>
+          )}
+
+          {/* Acquittal review — Finance must review and close */}
+          {acquittalReview.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-teal-800 flex items-center gap-2">
+                  <BookOpenCheck className="w-4 h-4 text-teal-600" />
+                  Acquittal Review — Action Required
+                </h2>
+                <span className="text-[11px] font-semibold bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
+                  {acquittalReview.length}
+                </span>
+              </div>
+              {acquittalReview.map(req => (
+                <AcquittalReviewCard key={req.id} req={req} onClose={handleClose} />
               ))}
             </div>
           )}
@@ -405,12 +628,12 @@ export default function FinancePage() {
             <div className="space-y-3">
               <h2 className="text-sm font-bold text-gray-700">Rejected</h2>
               {rejected.map(req => (
-                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} />
+                <RequestCard key={req.id} req={req} kraOptions={kraOptions} onDecide={handleDecide} onDefer={handleDefer} />
               ))}
             </div>
           )}
 
-          {inbox.length === 0 && approved.length === 0 && closed.length === 0 && rejected.length === 0 && (
+          {inbox.length === 0 && approved.length === 0 && closed.length === 0 && rejected.length === 0 && acquittalReview.length === 0 && (
             <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
               <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-600">No requests yet</p>
@@ -543,14 +766,15 @@ export default function FinancePage() {
           )}
 
           {/* Action alert */}
-          {inbox.length > 0 && (
+          {(inbox.length > 0 || acquittalReview.length > 0) && (
             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
               <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-xs font-semibold text-amber-800">Action Required</p>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  {inbox.length} request{inbox.length > 1 ? 's' : ''} totalling{' '}
-                  <span className="font-bold">{fmt(totalPending)}</span> await your decision.
+                  {inbox.length > 0 && <>{inbox.length} request{inbox.length > 1 ? 's' : ''} totalling{' '}
+                  <span className="font-bold">{fmt(totalPending)}</span> await your decision.{' '}</>}
+                  {acquittalReview.length > 0 && <>{acquittalReview.length} acquittal{acquittalReview.length > 1 ? 's' : ''} pending review.</>}
                 </p>
               </div>
             </div>
