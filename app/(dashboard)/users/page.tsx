@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { redirect } from 'next/navigation'
-import { MANAGED_USERS } from '@/lib/mock-data/me-data'
+import { generateClient } from 'aws-amplify/data'
+import type { Schema } from '@/amplify/data/resource'
 import type { ManagedUser, UserRole } from '@/types'
-import { UserPlus, Search, MoreVertical, CheckCircle, XCircle, X } from 'lucide-react'
+import { UserPlus, Search, MoreVertical, CheckCircle, XCircle, X, RefreshCw } from 'lucide-react'
+
+const client = generateClient<Schema>()
 
 const DIVISIONS = [
   'ICT Infrastructure',
@@ -21,20 +24,23 @@ function uid() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: ManagedUser) => void }) {
+function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: ManagedUser) => Promise<void> }) {
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [role, setRole]         = useState<UserRole>('admin')
   const [division, setDivision] = useState(DIVISIONS[0])
   const [error, setError]       = useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!name.trim())  { setError('Name is required.'); return }
     if (!email.trim()) { setError('Email is required.'); return }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Enter a valid email.'); return }
 
-    onAdd({
+    setSaving(true)
+    await onAdd({
       id: uid(),
       name: name.trim(),
       email: email.trim().toLowerCase(),
@@ -43,6 +49,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
       status: 'active',
       createdAt: new Date().toISOString().split('T')[0],
     })
+    setSaving(false)
     onClose()
   }
 
@@ -116,9 +123,9 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
               className="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
               Cancel
             </button>
-            <button type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors">
-              <UserPlus className="w-3.5 h-3.5" /> Create User
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-60 transition-colors">
+              <UserPlus className="w-3.5 h-3.5" /> {saving ? 'Creating…' : 'Create User'}
             </button>
           </div>
         </form>
@@ -143,10 +150,35 @@ export default function UsersPage() {
     redirect('/dashboard')
   }
 
-  const [users, setUsers]         = useState<ManagedUser[]>(MANAGED_USERS)
-  const [search, setSearch]       = useState('')
+  const [users, setUsers]           = useState<ManagedUser[]>([])
+  const [isLoading, setIsLoading]   = useState(true)
+  const [search, setSearch]         = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all')
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal]   = useState(false)
+
+  async function loadUsers() {
+    setIsLoading(true)
+    try {
+      const { data: items } = await (client.models as any).ManagedUser.list()
+      const mapped: ManagedUser[] = (items ?? []).map((u: any) => ({
+        id:        u.id,
+        name:      u.name,
+        email:     u.email,
+        role:      u.role as UserRole,
+        division:  u.division,
+        status:    u.status as 'active' | 'inactive',
+        lastLogin: u.lastLogin,
+        createdAt: (u.createdAt ?? '').slice(0, 10),
+      }))
+      setUsers(mapped)
+    } catch {
+      // AppSync unavailable — leave list empty
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => { loadUsers() }, [])
 
   const filtered = users
     .filter(u => roleFilter === 'all' || u.role === roleFilter)
@@ -172,7 +204,18 @@ export default function UsersPage() {
       {showModal && (
         <AddUserModal
           onClose={() => setShowModal(false)}
-          onAdd={u => setUsers(prev => [u, ...prev])}
+          onAdd={async (u) => {
+            try {
+              await (client.models as any).ManagedUser.create({
+                name:     u.name,
+                email:    u.email,
+                role:     u.role,
+                division: u.division,
+                status:   'active',
+              })
+            } catch { /* best-effort */ }
+            await loadUsers()
+          }}
         />
       )}
 
@@ -184,13 +227,23 @@ export default function UsersPage() {
             {users.filter(u => u.status === 'active').length} active · {users.length} total users
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-blue-800 transition-colors"
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          Add User
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadUsers}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 rounded px-3 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-blue-800 transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Add User
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -283,7 +336,13 @@ export default function UsersPage() {
           </table>
         </div>
 
-        {filtered.length === 0 && (
+        {isLoading && (
+          <div className="py-12 text-center">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Loading users…</p>
+          </div>
+        )}
+        {!isLoading && filtered.length === 0 && (
           <div className="py-12 text-center text-gray-400 text-sm">No users match your search.</div>
         )}
       </div>

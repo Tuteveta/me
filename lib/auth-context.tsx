@@ -6,6 +6,10 @@ import {
   signIn, signOut, getCurrentUser, fetchUserAttributes,
   updateUserAttributes, updatePassword,
 } from 'aws-amplify/auth'
+import { generateClient } from 'aws-amplify/data'
+import type { Schema } from '@/amplify/data/resource'
+
+const dataClient = generateClient<Schema>()
 
 export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
 
@@ -31,11 +35,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+async function upsertManagedUser(user: User): Promise<void> {
+  try {
+    const models = (dataClient.models as any)
+    const { data: existing } = await models.ManagedUser.list({
+      filter: { email: { eq: user.email } },
+    })
+    const now = new Date().toISOString().slice(0, 10)
+    if (existing && existing.length > 0) {
+      await models.ManagedUser.update({
+        id: existing[0].id,
+        name: user.name,
+        role: user.role,
+        division: user.division || 'Unassigned',
+        status: 'active',
+        lastLogin: now,
+      })
+    } else {
+      await models.ManagedUser.create({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        division: user.division || 'Unassigned',
+        status: 'active',
+        lastLogin: now,
+      })
+    }
+  } catch {
+    // Non-critical — don't block login if sync fails
+  }
+}
+
 async function loadCurrentUser(): Promise<User | null> {
   try {
     const { userId, username } = await getCurrentUser()
     const attrs = await fetchUserAttributes()
-    return {
+    const user: User = {
       id: userId,
       name: attrs.name ?? username,
       email: attrs.email ?? username,
@@ -43,6 +78,9 @@ async function loadCurrentUser(): Promise<User | null> {
       division: attrs['custom:division'] ?? '',
       lastLogin: new Date().toISOString(),
     }
+    // Sync this user's info into DynamoDB so the super admin dashboard can see them
+    upsertManagedUser(user)
+    return user
   } catch {
     return null
   }
