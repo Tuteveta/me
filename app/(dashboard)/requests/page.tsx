@@ -304,6 +304,7 @@ export default function RequestsPage() {
   const [amount, setAmount]         = useState('')
   const [files, setFiles]           = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const selectedWp  = workplans.find(w => w.id === wpId) ?? null
   const selectedKra = selectedWp?.kras.find(k => k.id === kraId) ?? null
@@ -325,20 +326,26 @@ export default function RequestsPage() {
     e.preventDefault()
     if (!user || !selectedWp || !selectedKra) return
     setSubmitting(true)
-    const uploadPrefix = `funding-requests/${crypto.randomUUID()}`
-    const attachments = await uploadFiles(files, uploadPrefix)
-    await submit({
-      programme:   selectedKra.title,
-      description,
-      amount:      parseFloat(amount),
-      fiscalYear:  selectedWp.fiscalYear,
-      submittedBy: user.name,
-      attachments,
-    })
-    setWpId(''); setKraId(''); setDescription(''); setAmount('')
-    setFiles([])
-    setShowForm(false)
-    setSubmitting(false)
+    setSubmitError(null)
+    try {
+      const uploadPrefix = `funding-requests/${crypto.randomUUID()}`
+      const attachments = await uploadFiles(files, uploadPrefix)
+      await submit({
+        programme:   selectedKra.title,
+        description,
+        amount:      parseFloat(amount),
+        fiscalYear:  selectedWp.fiscalYear,
+        submittedBy: user.name,
+        attachments,
+      })
+      setWpId(''); setKraId(''); setDescription(''); setAmount('')
+      setFiles([])
+      setShowForm(false)
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Submission failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function cancelForm() {
@@ -423,6 +430,13 @@ export default function RequestsPage() {
                   <Link href="/workplan" className="font-semibold underline">Create one now →</Link>
                 </p>
               </div>
+            </div>
+          )}
+
+          {submitError && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+              <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{submitError}</p>
             </div>
           )}
 

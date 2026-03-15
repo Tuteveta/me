@@ -81,20 +81,21 @@ export function FundingProvider({ children }: { children: ReactNode }) {
   useEffect(() => { load() }, [])
 
   async function submit(data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) {
-    await (client.models as any).FundingRequest.create({
-      programme:      data.programme,
-      description:    data.description,
-      amount:         data.amount,
-      fiscalYear:     data.fiscalYear,
-      submittedBy:    data.submittedBy,
-      submittedAt:    new Date().toISOString().slice(0, 10),
-      stage:          'pending_em',
-      emDecision:     JSON.stringify(pending),
-      deputyDecision: JSON.stringify(pending),
-      dcsDecision:    JSON.stringify(pending),
+    const { errors } = await (client.models as any).FundingRequest.create({
+      programme:       data.programme,
+      description:     data.description,
+      amount:          data.amount,
+      fiscalYear:      data.fiscalYear,
+      submittedBy:     data.submittedBy,
+      submittedAt:     new Date().toISOString().slice(0, 10),
+      stage:           'pending_em',
+      emDecision:      JSON.stringify(pending),
+      deputyDecision:  JSON.stringify(pending),
+      dcsDecision:     JSON.stringify(pending),
       financeDecision: JSON.stringify(pending),
-      attachments:    JSON.stringify(data.attachments),
+      attachments:     JSON.stringify(data.attachments),
     })
+    if (errors?.length) throw new Error(errors[0].message)
     await load()
   }
 
