@@ -11,7 +11,7 @@ import {
   BookOpenCheck, Lock, ClipboardList, ArrowRight, Plus,
 } from 'lucide-react'
 import type { FundingRequest } from '@/types'
-import { WORKPLANS } from '@/lib/mock-data/me-data'
+import { useWorkplan } from '@/lib/workplan-context'
 import { AttachmentList } from '@/app/(dashboard)/requests/page'
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
@@ -258,6 +258,7 @@ export default function FinancePage() {
   if (user && user.role !== 'finance') redirect('/dashboard')
 
   const { requests, decide } = useFunding()
+  const { workplans } = useWorkplan()
 
   const inbox    = requests.filter(r => r.stage === 'pending_finance')
   const approved = requests.filter(r => r.finance.decision === 'approved' && r.stage !== 'closed')
@@ -268,7 +269,7 @@ export default function FinancePage() {
   const totalAcquitted = closed.reduce((s, r) => s + r.amount, 0)
 
   // Finance's own work plans + KRA budget lines for the dropdown
-  const financeWorkplans = WORKPLANS  // Finance sees all plans; filter by division if needed
+  const financeWorkplans = workplans  // Finance sees all plans; filter by division if needed
   const kraOptions = financeWorkplans.flatMap(wp =>
     wp.kras.map(k => `${wp.fiscalYear} › ${k.title || 'Untitled KRA'}`)
   )

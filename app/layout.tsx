@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { FundingProvider } from '@/lib/funding-context'
+import { WorkplanProvider } from '@/lib/workplan-context'
 
 export const metadata: Metadata = {
   title: 'DICT M&E Dashboard | Department of Information Communication & Technology',
@@ -18,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <AuthProvider><FundingProvider>{children}</FundingProvider></AuthProvider>
+        <AuthProvider><WorkplanProvider><FundingProvider>{children}</FundingProvider></WorkplanProvider></AuthProvider>
       </body>
     </html>
   )

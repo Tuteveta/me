@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { WORKPLANS } from '@/lib/mock-data/me-data'
+import { useWorkplan } from '@/lib/workplan-context'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
@@ -346,16 +346,16 @@ function KRASection({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function WorkplanPage() {
-  const [workplans, setWorkplans] = useState<AnnualWorkplan[]>(WORKPLANS)
-  const [activeId, setActiveId]   = useState<string | null>(workplans[0]?.id ?? null)
+  const { workplans, addWorkplan, updateWorkplan } = useWorkplan()
+  const [activeId, setActiveId]   = useState<string | null>(null)
   const [editing, setEditing]     = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [saved, setSaved]         = useState(false)
 
-  const active = workplans.find(w => w.id === activeId) ?? null
+  const active = workplans.find(w => w.id === activeId) ?? workplans[0] ?? null
 
   function updateActive(wp: AnnualWorkplan) {
-    setWorkplans(prev => prev.map(w => w.id === wp.id ? wp : w))
+    updateWorkplan(wp)
   }
 
   function updateKRA(i: number, kra: KRA) {
@@ -382,7 +382,7 @@ export default function WorkplanPage() {
   }
 
   function handleCreate(wp: AnnualWorkplan) {
-    setWorkplans(prev => [wp, ...prev])
+    addWorkplan(wp)
     setActiveId(wp.id)
     setEditing(true)
   }

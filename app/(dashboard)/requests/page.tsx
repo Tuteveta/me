@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useFunding } from '@/lib/funding-context'
+import { useWorkplan } from '@/lib/workplan-context'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import {
   PlusCircle, Clock, XCircle, ChevronDown, ChevronUp,
   ArrowRight, AlertTriangle, FileText, Paperclip, Upload, X,
-  FileImage, FileSpreadsheet, File, BookOpenCheck, Lock,
+  FileImage, FileSpreadsheet, File, BookOpenCheck, Lock, ClipboardList,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage, RequestAttachment } from '@/types'
 import { uploadFile, sanitiseFilename, getSignedUrl } from '@/lib/storage'
@@ -45,16 +47,6 @@ const STAGE_ICON: Record<RequestStage, React.ElementType> = {
   closed:            Lock,
   rejected:          XCircle,
 }
-
-const PROGRAMMES = [
-  'National Fibre Backbone Expansion',
-  'eGovernment Portal v3.0',
-  'Rural Connectivity Program',
-  'Cybersecurity Framework Implementation',
-  'Digital Literacy Campaign',
-  'ICT Capacity Building',
-  'Digital Transformation Initiative',
-]
 
 const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip'
 
@@ -301,37 +293,56 @@ export default function RequestsPage() {
   if (user && user.role !== 'admin') redirect('/dashboard')
 
   const { requests, submit, submitAcquittal } = useFunding()
+  const { workplans } = useWorkplan()
   const myRequests = requests.filter(r => r.submittedBy === user?.name)
 
   const [showForm, setShowForm]     = useState(false)
   const [expanded, setExpanded]     = useState<string | null>(null)
-  const [form, setForm]             = useState({ programme: '', description: '', amount: '', fiscalYear: 'FY 2024/25' })
+  const [wpId, setWpId]             = useState('')
+  const [kraId, setKraId]           = useState('')
+  const [description, setDescription] = useState('')
+  const [amount, setAmount]         = useState('')
   const [files, setFiles]           = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
+
+  const selectedWp  = workplans.find(w => w.id === wpId) ?? null
+  const selectedKra = selectedWp?.kras.find(k => k.id === kraId) ?? null
+
+  function handleWpChange(id: string) {
+    setWpId(id)
+    setKraId('')
+    setDescription('')
+  }
+
+  function handleKraChange(id: string) {
+    setKraId(id)
+    const kra = selectedWp?.kras.find(k => k.id === id)
+    if (kra?.description) setDescription(kra.description)
+  }
 
   /* ── Submit new request ── */
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
-    if (!user) return
+    if (!user || !selectedWp || !selectedKra) return
     setSubmitting(true)
-    // Upload attachments to S3 first, then persist metadata to DynamoDB
     const uploadPrefix = `funding-requests/${crypto.randomUUID()}`
     const attachments = await uploadFiles(files, uploadPrefix)
     await submit({
-      programme:   form.programme,
-      description: form.description,
-      amount:      parseFloat(form.amount),
-      fiscalYear:  form.fiscalYear,
+      programme:   selectedKra.title,
+      description,
+      amount:      parseFloat(amount),
+      fiscalYear:  selectedWp.fiscalYear,
       submittedBy: user.name,
       attachments,
     })
-    setForm({ programme: '', description: '', amount: '', fiscalYear: 'FY 2024/25' })
+    setWpId(''); setKraId(''); setDescription(''); setAmount('')
     setFiles([])
     setShowForm(false)
     setSubmitting(false)
   }
 
   function cancelForm() {
+    setWpId(''); setKraId(''); setDescription(''); setAmount('')
     setFiles([])
     setShowForm(false)
   }
@@ -398,52 +409,102 @@ export default function RequestsPage() {
       {/* ── Submission form ─────────────────────────────────────────────────── */}
       {showForm && (
         <div className="bg-white border border-blue-200 rounded-lg p-5">
-          <h2 className="text-sm font-bold text-gray-900 mb-4">New Funding Request</h2>
+          <h2 className="text-sm font-bold text-gray-900 mb-1">New Funding Request</h2>
+          <p className="text-xs text-gray-400 mb-4">Requests must be linked to an approved annual workplan KRA.</p>
+
+          {/* No workplans warning */}
+          {workplans.length === 0 && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <ClipboardList className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-amber-800">No workplans found</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  You need an annual workplan before submitting a funding request.{' '}
+                  <Link href="/workplan" className="font-semibold underline">Create one now →</Link>
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+              {/* Step 1 — pick workplan */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Programme</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Annual Workplan <span className="text-red-500">*</span>
+                </label>
                 <select
                   required
-                  value={form.programme}
-                  onChange={e => setForm(f => ({ ...f, programme: e.target.value }))}
+                  value={wpId}
+                  onChange={e => handleWpChange(e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select a programme…</option>
-                  {PROGRAMMES.map(p => <option key={p}>{p}</option>)}
+                  <option value="">Select a workplan…</option>
+                  {workplans.map(wp => (
+                    <option key={wp.id} value={wp.id}>
+                      {wp.title} · {wp.fiscalYear} ({wp.status})
+                    </option>
+                  ))}
                 </select>
+                {selectedWp && (
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {selectedWp.division} · Budget: PGK {selectedWp.budget.toLocaleString()}
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Amount (PGK)</label>
+              {/* Step 2 — pick KRA */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Key Result Area (KRA) <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={kraId}
+                  disabled={!selectedWp}
+                  onChange={e => handleKraChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  <option value="">{selectedWp ? 'Select a KRA…' : '— select a workplan first —'}</option>
+                  {selectedWp?.kras.map(k => (
+                    <option key={k.id} value={k.id}>
+                      {k.title || 'Untitled KRA'}{k.weight ? ` (${k.weight}%)` : ''}
+                    </option>
+                  ))}
+                </select>
+                {selectedKra?.description && (
+                  <p className="text-[11px] text-gray-400 mt-1 italic">{selectedKra.description}</p>
+                )}
+              </div>
+
+              {/* Fiscal year — read-only, sourced from workplan */}
+              {selectedWp && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Fiscal Year</label>
+                  <div className="border border-gray-200 bg-gray-50 rounded px-3 py-2.5 text-sm text-gray-500">
+                    {selectedWp.fiscalYear}
+                  </div>
+                </div>
+              )}
+
+              <div className={selectedWp ? '' : 'sm:col-span-2'}>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Amount Requested (PGK) <span className="text-red-500">*</span></label>
                 <input
                   type="number" required min={1} placeholder="e.g. 500000"
-                  value={form.amount}
-                  onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Fiscal Year</label>
-                <select
-                  value={form.fiscalYear}
-                  onChange={e => setForm(f => ({ ...f, fiscalYear: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option>FY 2024/25</option>
-                  <option>FY 2025/26</option>
-                </select>
-              </div>
-
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Justification</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Justification <span className="text-red-500">*</span></label>
                 <textarea
                   required rows={3}
-                  placeholder="Describe why this funding is needed…"
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Describe why this funding is needed and how it aligns with the KRA…"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
@@ -462,7 +523,7 @@ export default function RequestsPage() {
 
             <div className="flex gap-2">
               <button
-                type="submit" disabled={submitting}
+                type="submit" disabled={submitting || !selectedWp || !selectedKra}
                 className="flex items-center gap-1.5 bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded hover:bg-blue-800 disabled:opacity-60 transition-colors"
               >
                 {submitting ? 'Uploading & Submitting…' : <> Submit for Approval <ArrowRight className="w-3.5 h-3.5" /></>}
