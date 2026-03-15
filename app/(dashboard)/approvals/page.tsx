@@ -171,7 +171,7 @@ export default function ApprovalsPage() {
   const { user } = useAuth()
   if (user && user.role !== 'executive' && user.role !== 'deputy' && user.role !== 'dcs') redirect('/dashboard')
 
-  const { requests, decide } = useFunding()
+  const { requests, decide, isLoading } = useFunding()
   const stage = user?.role === 'executive' ? 'em' : user?.role === 'dcs' ? 'dcs' : 'deputy'
   const stageFilter = stage === 'em' ? 'pending_em' : stage === 'dcs' ? 'pending_dcs' : 'pending_deputy'
 
@@ -232,7 +232,14 @@ export default function ApprovalsPage() {
         </div>
       )}
 
-      {pending.length === 0 && (
+      {isLoading && (
+        <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Loading requests…</p>
+        </div>
+      )}
+
+      {!isLoading && pending.length === 0 && (
         <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
           <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">All caught up</p>

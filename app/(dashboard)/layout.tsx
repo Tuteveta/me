@@ -3,6 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { FundingProvider } from '@/lib/funding-context'
+import { WorkplanProvider } from '@/lib/workplan-context'
 import DashboardShell from '@/components/layout/DashboardShell'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -28,5 +30,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null
 
-  return <DashboardShell>{children}</DashboardShell>
+  return (
+    <WorkplanProvider>
+      <FundingProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </FundingProvider>
+    </WorkplanProvider>
+  )
 }
