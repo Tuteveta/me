@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useFunding } from '@/lib/funding-context'
 import { redirect } from 'next/navigation'
 import {
-  CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, FileText, AlertTriangle,
+  CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, FileText, AlertTriangle, RefreshCw,
 } from 'lucide-react'
 import type { FundingRequest } from '@/types'
 import { AttachmentList } from '@/app/(dashboard)/requests/page'
@@ -171,7 +171,9 @@ export default function ApprovalsPage() {
   const { user } = useAuth()
   if (user && user.role !== 'executive' && user.role !== 'deputy' && user.role !== 'dcs') redirect('/dashboard')
 
-  const { requests, decide, isLoading } = useFunding()
+  const { requests, decide, reload, isLoading } = useFunding()
+  const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
   const stage = user?.role === 'executive' ? 'em' : user?.role === 'dcs' ? 'dcs' : 'deputy'
   const stageFilter = stage === 'em' ? 'pending_em' : stage === 'dcs' ? 'pending_dcs' : 'pending_deputy'
 
@@ -180,25 +182,54 @@ export default function ApprovalsPage() {
 
   async function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string) {
     if (!user) return
-    await decide(id, stage, decision, user.name, comment || undefined)
+    setError(null)
+    try {
+      await decide(id, stage, decision, user.name, comment || undefined)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to save decision. Please try again.')
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    setError(null)
+    await reload()
+    setRefreshing(false)
   }
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-black text-gray-900">
-          {stage === 'em' ? 'Executive Manager' : stage === 'deputy' ? 'Deputy Secretary' : 'Director Corporate Services'} — Approvals
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {stage === 'em'
-            ? 'Review funding requests submitted by the M&E Manager'
-            : stage === 'deputy'
-            ? 'Review requests endorsed by the Executive Manager'
-            : 'Review requests endorsed by the Deputy Secretary before Finance allocation'}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-black text-gray-900">
+            {stage === 'em' ? 'Executive Manager' : stage === 'deputy' ? 'Deputy Secretary' : 'Director Corporate Services'} — Approvals
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {stage === 'em'
+              ? 'Review funding requests submitted by the M&E Manager'
+              : stage === 'deputy'
+              ? 'Review requests endorsed by the Executive Manager'
+              : 'Review requests endorsed by the Deputy Secretary before Finance allocation'}
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing || isLoading}
+          className="shrink-0 flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
+
+      {error && (
+        <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

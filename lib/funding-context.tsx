@@ -13,6 +13,7 @@ const client = generateClient<Schema>()
 interface FundingContextType {
   requests: FundingRequest[]
   isLoading: boolean
+  reload: () => Promise<void>
   submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) => Promise<void>
   decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) => Promise<void>
   submitAcquittal: (id: string, report: AcquittalReport) => Promise<void>
@@ -63,7 +64,7 @@ function transform(item: Record<string, unknown>): FundingRequest {
 
 export function FundingProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<FundingRequest[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)  // true until first load completes
 
   async function load() {
     setIsLoading(true)
@@ -100,12 +101,13 @@ export function FundingProvider({ children }: { children: ReactNode }) {
   async function decide(id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) {
     const entry: ApprovalEntry = { decision, by, at: new Date().toISOString().slice(0, 10), comment }
     const fieldMap = { em: 'emDecision', deputy: 'deputyDecision', dcs: 'dcsDecision', finance: 'financeDecision' }
-    await (client.models as any).FundingRequest.update({
+    const { errors } = await (client.models as any).FundingRequest.update({
       id,
       [fieldMap[stage]]: JSON.stringify(entry),
       stage: nextStage(stage, decision),
       ...(stage === 'finance' && budgetLine ? { budgetLine } : {}),
     })
+    if (errors?.length) throw new Error(errors[0].message)
     await load()
   }
 
@@ -121,7 +123,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FundingContext.Provider value={{ requests, isLoading, submit, decide, submitAcquittal }}>
+    <FundingContext.Provider value={{ requests, isLoading, reload: load, submit, decide, submitAcquittal }}>
       {children}
     </FundingContext.Provider>
   )
