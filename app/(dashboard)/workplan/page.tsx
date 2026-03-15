@@ -500,7 +500,7 @@ export default function WorkplanPage() {
                       : 'border-amber-200 bg-amber-50 text-amber-700'
                   }`}>
                     <span className="font-bold">Weight: {totalWeight}%</span>
-                    {totalWeight !== 100 && <span className="text-[10px]">(must = 100%)</span>}
+                    {totalWeight !== 100 && <span className="text-[10px]">(ideally 100%)</span>}
                   </div>
                 </div>
                 {active.objective && (
@@ -535,10 +535,9 @@ export default function WorkplanPage() {
                     </button>
                     <button
                       onClick={handleSubmit}
-                      disabled={totalWeight !== 100}
-                      className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 transition-colors"
                     >
-                      <Send className="w-3.5 h-3.5" /> Submit
+                      <Send className="w-3.5 h-3.5" /> Submit for Approval
                     </button>
                     <button
                       onClick={() => setEditing(false)}
