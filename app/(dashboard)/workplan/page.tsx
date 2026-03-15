@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useWorkplan } from '@/lib/workplan-context'
+import { useAuth } from '@/lib/auth-context'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
@@ -35,10 +36,11 @@ function emptyKRA(): KRA {
 
 // ── New Workplan Modal ─────────────────────────────────────────────────────────
 function NewWorkplanModal({
-  onClose, onCreate,
+  onClose, onCreate, createdBy,
 }: {
   onClose: () => void
   onCreate: (wp: AnnualWorkplan) => void
+  createdBy: string
 }) {
   const [title, setTitle]       = useState('')
   const [year, setYear]         = useState('FY 2025/26')
@@ -59,7 +61,7 @@ function NewWorkplanModal({
       division,
       objective,
       budget: parseFloat(budget.replace(/,/g, '')) || 0,
-      createdBy: 'Mary Kila',
+      createdBy,
       status: 'draft',
       createdAt: new Date().toISOString().split('T')[0],
       kras: [emptyKRA()],
@@ -346,6 +348,7 @@ function KRASection({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function WorkplanPage() {
+  const { user } = useAuth()
   const { workplans, addWorkplan, updateWorkplan } = useWorkplan()
   const [activeId, setActiveId]   = useState<string | null>(null)
   const [editing, setEditing]     = useState(false)
@@ -370,6 +373,9 @@ export default function WorkplanPage() {
   }
 
   function handleSave() {
+    // Explicitly persist the current workplan state — don't rely solely on
+    // per-keystroke updates in case any were lost due to batching.
+    if (active) updateWorkplan(active)
     setEditing(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -393,7 +399,11 @@ export default function WorkplanPage() {
     <div className="p-4 sm:p-6 flex flex-col md:flex-row gap-4 min-h-full">
 
       {showModal && (
-        <NewWorkplanModal onClose={() => setShowModal(false)} onCreate={handleCreate} />
+        <NewWorkplanModal
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreate}
+          createdBy={user?.name ?? 'Unknown'}
+        />
       )}
 
       {/* ── Left panel: workplan list ──────────────────────────────────────── */}

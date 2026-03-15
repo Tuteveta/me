@@ -18,6 +18,11 @@ interface WorkplanContextType {
 
 const WorkplanContext = createContext<WorkplanContextType | null>(null)
 
+// Save to localStorage — pure side-effect, no state involved
+function save(next: AnnualWorkplan[]) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
+}
+
 export function WorkplanProvider({ children }: { children: ReactNode }) {
   const [workplans, setWorkplans] = useState<AnnualWorkplan[]>([])
 
@@ -29,14 +34,32 @@ export function WorkplanProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [])
 
-  function persist(next: AnnualWorkplan[]) {
-    setWorkplans(next)
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
+  // All mutations use the functional-update form of setWorkplans so they always
+  // operate on the latest state — avoids stale-closure bugs when edits arrive
+  // in rapid succession (e.g. per-keystroke KRA updates).
+  function addWorkplan(wp: AnnualWorkplan) {
+    setWorkplans(prev => {
+      const next = [wp, ...prev]
+      save(next)
+      return next
+    })
   }
 
-  const addWorkplan    = (wp: AnnualWorkplan)  => persist([wp, ...workplans])
-  const updateWorkplan = (wp: AnnualWorkplan)  => persist(workplans.map(w => w.id === wp.id ? wp : w))
-  const deleteWorkplan = (id: string)          => persist(workplans.filter(w => w.id !== id))
+  function updateWorkplan(wp: AnnualWorkplan) {
+    setWorkplans(prev => {
+      const next = prev.map(w => w.id === wp.id ? wp : w)
+      save(next)
+      return next
+    })
+  }
+
+  function deleteWorkplan(id: string) {
+    setWorkplans(prev => {
+      const next = prev.filter(w => w.id !== id)
+      save(next)
+      return next
+    })
+  }
 
   return (
     <WorkplanContext.Provider value={{ workplans, addWorkplan, updateWorkplan, deleteWorkplan }}>
