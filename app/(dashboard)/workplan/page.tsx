@@ -349,11 +349,12 @@ function KRASection({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function WorkplanPage() {
   const { user } = useAuth()
-  const { workplans, addWorkplan, updateWorkplan } = useWorkplan()
-  const [activeId, setActiveId]   = useState<string | null>(null)
-  const [editing, setEditing]     = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  const [saved, setSaved]         = useState(false)
+  const { workplans, addWorkplan, updateWorkplan, deleteWorkplan } = useWorkplan()
+  const [activeId, setActiveId]     = useState<string | null>(null)
+  const [editing, setEditing]       = useState(false)
+  const [showModal, setShowModal]   = useState(false)
+  const [saved, setSaved]           = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const active = workplans.find(w => w.id === activeId) ?? workplans[0] ?? null
 
@@ -391,6 +392,14 @@ export default function WorkplanPage() {
     addWorkplan(wp)
     setActiveId(wp.id)
     setEditing(true)
+  }
+
+  function handleDelete() {
+    if (!active) return
+    deleteWorkplan(active.id)
+    setActiveId(null)
+    setEditing(false)
+    setConfirmDelete(false)
   }
 
   const totalWeight = active?.kras.reduce((s, k) => s + k.weight, 0) ?? 0
@@ -440,7 +449,7 @@ export default function WorkplanPage() {
             return (
               <button
                 key={wp.id}
-                onClick={() => { setActiveId(wp.id); setEditing(false) }}
+                onClick={() => { setActiveId(wp.id); setEditing(false); setConfirmDelete(false) }}
                 className={`w-full text-left px-4 py-3 rounded-sm border transition-colors ${
                   isActive
                     ? 'border-blue-500 bg-blue-50'
@@ -514,6 +523,34 @@ export default function WorkplanPage() {
                   <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                     <CheckCircle className="w-3.5 h-3.5" /> Saved
                   </span>
+                )}
+
+                {/* Delete button — always visible, requires confirmation */}
+                {!editing && !confirmDelete && (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-1.5 text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded hover:bg-red-50 hover:border-red-300 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                )}
+
+                {confirmDelete && (
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded px-3 py-1.5">
+                    <span className="text-xs text-red-700 font-medium">Delete this workplan?</span>
+                    <button
+                      onClick={handleDelete}
+                      className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-2.5 py-1 rounded transition-colors"
+                    >
+                      Yes, delete
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 )}
 
                 {active.status === 'draft' && !editing && (
