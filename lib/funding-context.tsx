@@ -92,9 +92,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
       deputyDecision: JSON.stringify(pending),
       dcsDecision:    JSON.stringify(pending),
       financeDecision: JSON.stringify(pending),
-      attachments:    JSON.stringify(
-        data.attachments.map(a => ({ name: a.name, size: a.size, type: a.type, url: '' }))
-      ),
+      attachments:    JSON.stringify(data.attachments),
     })
     await load()
   }
@@ -117,9 +115,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
       stage:               'closed' as RequestStage,
       acquittalNotes:      report.notes,
       acquittalSubmittedAt: report.submittedAt,
-      acquittalAttachments: JSON.stringify(
-        report.attachments.map(a => ({ name: a.name, size: a.size, type: a.type, url: '' }))
-      ),
+      acquittalAttachments: JSON.stringify(report.attachments),
     })
     await load()
   }

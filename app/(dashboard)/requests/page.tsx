@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useFunding } from '@/lib/funding-context'
 import { redirect } from 'next/navigation'
@@ -10,6 +10,7 @@ import {
   FileImage, FileSpreadsheet, File, BookOpenCheck, Lock,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage, RequestAttachment } from '@/types'
+import { uploadFile, sanitiseFilename, getSignedUrl } from '@/lib/storage'
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
@@ -57,7 +58,37 @@ const PROGRAMMES = [
 
 const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip'
 
-/* ── Attachment chip ───────────────────────────────────────────────────────── */
+/* ── Single attachment link — fetches a pre-signed S3 URL on mount ─────────── */
+function AttachmentLink({ attachment }: { attachment: RequestAttachment }) {
+  const [href, setHref] = useState<string | null>(null)
+  const Icon = fileIcon(attachment.type)
+
+  useEffect(() => {
+    const url = attachment.url
+    if (!url) { setHref('#'); return }
+    // Already a full HTTP URL (legacy blob or external) — use as-is
+    if (url.startsWith('http') || url.startsWith('blob:')) { setHref(url); return }
+    // S3 key — exchange for a pre-signed URL
+    getSignedUrl(url).then(setHref).catch(() => setHref('#'))
+  }, [attachment.url])
+
+  return (
+    <a
+      href={href ?? '#'}
+      download={attachment.name}
+      target="_blank"
+      rel="noreferrer"
+      onClick={!href ? (e) => e.preventDefault() : undefined}
+      className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded px-2.5 py-1.5 transition-colors group"
+    >
+      <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
+      <span className="text-xs text-gray-700 group-hover:text-blue-700 max-w-40 truncate">{attachment.name}</span>
+      <span className="text-[10px] text-gray-400">{fmtBytes(attachment.size)}</span>
+    </a>
+  )
+}
+
+/* ── Attachment list (exported — used by approvals and finance pages) ───────── */
 export function AttachmentList({ attachments }: { attachments: RequestAttachment[] }) {
   if (!attachments.length) return null
   return (
@@ -66,23 +97,9 @@ export function AttachmentList({ attachments }: { attachments: RequestAttachment
         <Paperclip className="w-3 h-3" /> Attachments ({attachments.length})
       </p>
       <div className="flex flex-wrap gap-2">
-        {attachments.map((a, i) => {
-          const Icon = fileIcon(a.type)
-          return (
-            <a
-              key={i}
-              href={a.url}
-              download={a.name}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded px-2.5 py-1.5 transition-colors group"
-            >
-              <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
-              <span className="text-xs text-gray-700 group-hover:text-blue-700 max-w-40 truncate">{a.name}</span>
-              <span className="text-[10px] text-gray-400">{fmtBytes(a.size)}</span>
-            </a>
-          )
-        })}
+        {attachments.map((a, i) => (
+          <AttachmentLink key={i} attachment={a} />
+        ))}
       </div>
     </div>
   )
@@ -137,12 +154,12 @@ function TrackerBar({ req }: { req: FundingRequest }) {
   )
 }
 
-/* ── File upload zone (reusable) ───────────────────────────────────────────── */
+/* ── File upload zone — works with raw File objects ────────────────────────── */
 function FileUploadZone({
   files, onAdd, onRemove,
 }: {
-  files: RequestAttachment[]
-  onAdd: (files: RequestAttachment[]) => void
+  files: File[]
+  onAdd: (files: File[]) => void
   onRemove: (i: number) => void
 }) {
   const [dragging, setDragging] = useState(false)
@@ -150,9 +167,7 @@ function FileUploadZone({
 
   function processFiles(raw: FileList | null) {
     if (!raw) return
-    onAdd(Array.from(raw).map(f => ({
-      name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f),
-    })))
+    onAdd(Array.from(raw))
   }
 
   return (
@@ -197,13 +212,24 @@ function FileUploadZone({
   )
 }
 
+/* ── Upload helper — uploads File[] to S3 under a given prefix ─────────────── */
+async function uploadFiles(files: File[], prefix: string): Promise<RequestAttachment[]> {
+  return Promise.all(
+    files.map(async (f) => {
+      const key = `${prefix}/${Date.now()}-${sanitiseFilename(f.name)}`
+      await uploadFile(f, key)
+      return { name: f.name, size: f.size, type: f.type, url: key } as RequestAttachment
+    })
+  )
+}
+
 /* ── Acquittal submission form ─────────────────────────────────────────────── */
 function AcquittalForm({ req, onSubmit }: {
   req: FundingRequest
   onSubmit: (notes: string, attachments: RequestAttachment[]) => Promise<void>
 }) {
   const [notes, setNotes]   = useState('')
-  const [files, setFiles]   = useState<RequestAttachment[]>([])
+  const [files, setFiles]   = useState<File[]>([])
   const [busy, setBusy]     = useState(false)
   const [error, setError]   = useState('')
 
@@ -211,12 +237,9 @@ function AcquittalForm({ req, onSubmit }: {
     e.preventDefault()
     if (!notes.trim()) { setError('Please provide acquittal notes describing the use of funds.'); return }
     setBusy(true)
-    await onSubmit(notes, files)
+    const attachments = await uploadFiles(files, `acquittals/${req.id}`)
+    await onSubmit(notes, attachments)
     setBusy(false)
-  }
-
-  function removeFile(i: number) {
-    setFiles(prev => { URL.revokeObjectURL(prev[i].url); return prev.filter((_, idx) => idx !== i) })
   }
 
   return (
@@ -257,7 +280,7 @@ function AcquittalForm({ req, onSubmit }: {
         <FileUploadZone
           files={files}
           onAdd={added => setFiles(prev => [...prev, ...added])}
-          onRemove={removeFile}
+          onRemove={i => setFiles(prev => prev.filter((_, idx) => idx !== i))}
         />
       </div>
 
@@ -266,7 +289,7 @@ function AcquittalForm({ req, onSubmit }: {
         disabled={busy}
         className="flex items-center gap-1.5 bg-emerald-600 text-white text-sm font-semibold px-5 py-2 rounded hover:bg-emerald-700 disabled:opacity-60 transition-colors"
       >
-        {busy ? 'Submitting…' : <>Submit Acquittal <ArrowRight className="w-3.5 h-3.5" /></>}
+        {busy ? 'Uploading & Submitting…' : <>Submit Acquittal <ArrowRight className="w-3.5 h-3.5" /></>}
       </button>
     </div>
   )
@@ -283,7 +306,7 @@ export default function RequestsPage() {
   const [showForm, setShowForm]     = useState(false)
   const [expanded, setExpanded]     = useState<string | null>(null)
   const [form, setForm]             = useState({ programme: '', description: '', amount: '', fiscalYear: 'FY 2024/25' })
-  const [files, setFiles]           = useState<RequestAttachment[]>([])
+  const [files, setFiles]           = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
 
   /* ── Submit new request ── */
@@ -291,13 +314,16 @@ export default function RequestsPage() {
     e.preventDefault()
     if (!user) return
     setSubmitting(true)
+    // Upload attachments to S3 first, then persist metadata to DynamoDB
+    const uploadPrefix = `funding-requests/${crypto.randomUUID()}`
+    const attachments = await uploadFiles(files, uploadPrefix)
     await submit({
       programme:   form.programme,
       description: form.description,
       amount:      parseFloat(form.amount),
       fiscalYear:  form.fiscalYear,
       submittedBy: user.name,
-      attachments: files,
+      attachments,
     })
     setForm({ programme: '', description: '', amount: '', fiscalYear: 'FY 2024/25' })
     setFiles([])
@@ -306,13 +332,8 @@ export default function RequestsPage() {
   }
 
   function cancelForm() {
-    files.forEach(f => URL.revokeObjectURL(f.url))
     setFiles([])
     setShowForm(false)
-  }
-
-  function removeFile(i: number) {
-    setFiles(prev => { URL.revokeObjectURL(prev[i].url); return prev.filter((_, idx) => idx !== i) })
   }
 
   async function handleAcquittal(id: string, notes: string, attachments: RequestAttachment[]) {
@@ -348,10 +369,10 @@ export default function RequestsPage() {
       {/* Summary pills */}
       <div className="flex flex-wrap gap-2">
         {[
-          { label: 'In Progress',       count: inProgress.length - pendingAcq, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-          { label: 'Acquittal Due',     count: pendingAcq,                     cls: 'bg-orange-50 text-orange-700 border-orange-200' },
-          { label: 'Closed',            count: closedCount,                    cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-          { label: 'Rejected',          count: myRequests.filter(r => r.stage === 'rejected').length, cls: 'bg-red-50 text-red-700 border-red-200' },
+          { label: 'In Progress',   count: inProgress.length - pendingAcq, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+          { label: 'Acquittal Due', count: pendingAcq,                     cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+          { label: 'Closed',        count: closedCount,                    cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+          { label: 'Rejected',      count: myRequests.filter(r => r.stage === 'rejected').length, cls: 'bg-red-50 text-red-700 border-red-200' },
         ].map(p => (
           <span key={p.label} className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border ${p.cls}`}>
             {p.count} {p.label}
@@ -434,7 +455,7 @@ export default function RequestsPage() {
                 <FileUploadZone
                   files={files}
                   onAdd={added => setFiles(prev => [...prev, ...added])}
-                  onRemove={removeFile}
+                  onRemove={i => setFiles(prev => prev.filter((_, idx) => idx !== i))}
                 />
               </div>
             </div>
@@ -444,7 +465,7 @@ export default function RequestsPage() {
                 type="submit" disabled={submitting}
                 className="flex items-center gap-1.5 bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded hover:bg-blue-800 disabled:opacity-60 transition-colors"
               >
-                {submitting ? 'Submitting…' : <> Submit for Approval <ArrowRight className="w-3.5 h-3.5" /></>}
+                {submitting ? 'Uploading & Submitting…' : <> Submit for Approval <ArrowRight className="w-3.5 h-3.5" /></>}
               </button>
               <button
                 type="button" onClick={cancelForm}
