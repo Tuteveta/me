@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { FundingProvider } from '@/lib/funding-context'
 import { WorkplanProvider } from '@/lib/workplan-context'
+import { TeamProvider } from '@/lib/team-context'
 import DashboardShell from '@/components/layout/DashboardShell'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +34,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <WorkplanProvider>
       <FundingProvider>
-        <DashboardShell>{children}</DashboardShell>
+        <TeamProvider>
+          <DashboardShell>{children}</DashboardShell>
+        </TeamProvider>
       </FundingProvider>
     </WorkplanProvider>
   )

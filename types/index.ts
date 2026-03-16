@@ -1,4 +1,4 @@
-export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs' | 'officer'
 
 export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'delayed' | 'planned'
 export type KPIStatus = 'on-track' | 'at-risk' | 'off-track' | 'exceeded'
@@ -200,4 +200,41 @@ export interface ManagedUser {
   status: 'active' | 'inactive'
   lastLogin?: string
   createdAt: string
+}
+
+// ── Officers — staff created by managers ───────────────────
+export interface Officer {
+  id: string
+  name: string
+  email: string
+  position: string        // job title / designation
+  division: string
+  program?: string        // program they work under
+  createdBy: string       // name of the manager who created them
+  createdByRole: UserRole
+  status: 'active' | 'inactive'
+  createdAt: string
+}
+
+// ── Tasks — assigned by managers to officers ───────────────
+export type TaskStatus   = 'pending' | 'in_progress' | 'completed' | 'overdue'
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface Task {
+  id: string
+  title: string
+  description: string
+  assignedTo: string        // officer id
+  assignedToName: string    // officer name (denormalised)
+  assignedBy: string        // manager name
+  assignedByRole: UserRole
+  division: string
+  program?: string
+  priority: TaskPriority
+  status: TaskStatus
+  dueDate: string
+  createdAt: string
+  completedAt?: string
+  progress: number          // 0–100
+  notes?: string            // officer's latest update note
 }

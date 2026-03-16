@@ -8,7 +8,7 @@ import type { UserRole } from '@/lib/auth-context'
 import {
   LayoutDashboard, FolderKanban, Target, FileText,
   Settings, Users, ChevronLeft, ChevronRight, LogOut, ClipboardList, X, Banknote,
-  SendHorizonal, BadgeCheck, UserCircle, Network, BookMarked, PieChart,
+  SendHorizonal, BadgeCheck, UserCircle, Network, BookMarked, PieChart, UserCheck,
 } from 'lucide-react'
 
 interface NavItem {
@@ -19,7 +19,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Overview',          href: '/dashboard',      roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: LayoutDashboard, label: 'Overview',          href: '/dashboard',      roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs', 'officer'] },
   { icon: Network,         label: 'Organisation',       href: '/organisation',  roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
   { icon: BookMarked,      label: 'Corporate Plan',     href: '/corporate-plan', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
   { icon: PieChart,        label: 'Expenditure Budget', href: '/budget',        roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
@@ -32,7 +32,9 @@ const NAV_ITEMS: NavItem[] = [
   { icon: SendHorizonal,   label: 'My Requests',        href: '/requests',      roles: ['admin'] },
   { icon: BadgeCheck,      label: 'Approvals',          href: '/approvals',     roles: ['executive', 'deputy', 'dcs'] },
   { icon: Banknote,        label: 'Finance',            href: '/finance',       roles: ['finance'] },
-  { icon: UserCircle,      label: 'My Profile',         href: '/profile',       roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: UserCheck,       label: 'My Team',            href: '/my-team',       roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: ClipboardList,   label: 'My Tasks',           href: '/my-tasks',      roles: ['officer'] },
+  { icon: UserCircle,      label: 'My Profile',         href: '/profile',       roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs', 'officer'] },
 ]
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -42,6 +44,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   executive: 'bg-purple-100 text-purple-700',
   deputy:    'bg-indigo-100 text-indigo-700',
   dcs:       'bg-teal-100 text-teal-700',
+  officer:   'bg-gray-100 text-gray-700',
 }
 
 const ROLE_DISPLAY: Record<UserRole, string> = {
@@ -51,6 +54,7 @@ const ROLE_DISPLAY: Record<UserRole, string> = {
   executive: 'Exec. Manager',
   deputy:    'Deputy Secretary',
   dcs:       'Dir. Corporate Services',
+  officer:   'Officer',
 }
 
 interface SidebarProps {

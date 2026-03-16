@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import { useFunding } from '@/lib/funding-context'
 import { useWorkplan } from '@/lib/workplan-context'
+import { useTeam } from '@/lib/team-context'
 import Link from 'next/link'
 import {
   Clock, CheckCircle2, XCircle, ArrowRight,
@@ -12,7 +13,7 @@ import {
   AlertTriangle, BookOpenCheck, Users, Settings,
   Network, BookMarked, PieChart, BarChart3,
   Briefcase, UserCheck, Lock, PauseCircle,
-  Building2, Globe, Activity,
+  Building2, Globe, Activity, UserCircle,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage } from '@/types'
 import { WORKPLANS, KPIS, PROJECTS, REPORTS } from '@/lib/mock-data/me-data'
@@ -59,6 +60,7 @@ const ROLE_LABELS: Record<string, string> = {
   executive: 'Executive Manager',
   deputy:    'Deputy Secretary',
   dcs:       'Dir. Corporate Services',
+  officer:   'Officer',
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -1041,6 +1043,137 @@ function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
+/* 7. OFFICER Dashboard                                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+function OfficerDashboard({ userName }: { userName: string }) {
+  const { officers, tasksByOfficer } = useTeam()
+
+  const myRecord = officers.find(o => o.name === userName)
+  const myTasks  = myRecord ? tasksByOfficer(myRecord.id) : []
+
+  const total     = myTasks.length
+  const pending   = myTasks.filter(t => t.status === 'pending').length
+  const inProg    = myTasks.filter(t => t.status === 'in_progress').length
+  const completed = myTasks.filter(t => t.status === 'completed').length
+  const overdue   = myTasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length
+  const compPct   = total > 0 ? Math.round((completed / total) * 100) : 0
+
+  const recent = [...myTasks]
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5)
+
+  const PRIORITY_DOT: Record<string, string> = {
+    low: 'bg-gray-400', medium: 'bg-blue-500', high: 'bg-amber-500', urgent: 'bg-red-500',
+  }
+
+  return (
+    <div className="p-5 space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={ClipboardList} label="Total Tasks"  value={total}     color="#3B82F6" href="/my-tasks" />
+        <StatCard icon={Activity}      label="In Progress"  value={inProg}    color="#D97706" href="/my-tasks" />
+        <StatCard icon={CheckCircle2}  label="Completed"    value={completed} color="#10B981" href="/my-tasks" />
+        <StatCard icon={AlertTriangle} label="Overdue"      value={overdue}   sub={overdue > 0 ? 'Action needed' : 'All clear'} color="#EF4444" href="/my-tasks" />
+      </div>
+
+      {/* Completion bar */}
+      {total > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-bold text-gray-800">Overall Task Completion</span>
+            </div>
+            <span className="text-sm font-black text-emerald-600">{compPct}%</span>
+          </div>
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${compPct}%` }} />
+          </div>
+          <div className="flex gap-4 mt-2 text-[11px] text-gray-400">
+            <span>{completed} completed</span>
+            <span>{inProg} in progress</span>
+            <span>{pending} pending</span>
+            {overdue > 0 && <span className="text-red-600 font-semibold">{overdue} overdue</span>}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* Task list */}
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-blue-50"><ClipboardList className="w-4 h-4 text-blue-700" /></div>
+              <div>
+                <h2 className="text-sm font-bold text-gray-900">My Active Tasks</h2>
+                <p className="text-xs text-gray-400">Sorted by due date</p>
+              </div>
+            </div>
+            <Link href="/my-tasks" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          {recent.length === 0 ? (
+            <EmptyPanel message="No tasks assigned yet" sub="Your manager will assign tasks to you." />
+          ) : (
+            <ul>
+              {recent.map(t => {
+                const isOverdue = new Date(t.dueDate) < new Date() && t.status !== 'completed'
+                return (
+                  <li key={t.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_DOT[t.priority]}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${t.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                        {t.title}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Due {t.dueDate} · by {t.assignedBy}
+                        {isOverdue && <span className="ml-1 text-red-600 font-semibold">· Overdue</span>}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-xs font-black text-gray-700">{t.progress}%</div>
+                      <div className="w-14 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-0.5">
+                        <div className="h-full rounded-full bg-blue-500" style={{ width: `${t.progress}%` }} />
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Quick links */}
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Quick Links</p>
+            <div className="space-y-2">
+              <QuickLink icon={ClipboardList} label="My Tasks"        href="/my-tasks"        color="#3B82F6" />
+              <QuickLink icon={UserCircle}    label="My Profile"      href="/profile"         color="#8B5CF6" />
+              <QuickLink icon={Network}       label="Organisation"    href="/organisation"    color="#D97706" />
+              <QuickLink icon={BookMarked}    label="Corporate Plan"  href="/corporate-plan"  color="#10B981" />
+            </div>
+          </div>
+          {myRecord && (
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">My Details</p>
+              <div className="space-y-2 text-xs text-gray-600">
+                <div><span className="font-semibold text-gray-900">Position:</span> {myRecord.position}</div>
+                <div><span className="font-semibold text-gray-900">Division:</span> {myRecord.division}</div>
+                {myRecord.program && <div><span className="font-semibold text-gray-900">Program:</span> {myRecord.program}</div>}
+                <div><span className="font-semibold text-gray-900">Reporting to:</span> {myRecord.createdBy}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 /* Page — routes to the correct role dashboard                                  */
 /* ─────────────────────────────────────────────────────────────────────────── */
 export default function OverviewPage() {
@@ -1065,6 +1198,7 @@ export default function OverviewPage() {
     user.role === 'dcs'       ? { href: '/approvals', label: 'Review Approvals'    } :
     user.role === 'finance'   ? { href: '/finance',   label: 'Finance Desk'        } :
     user.role === 'super'     ? { href: '/users',     label: 'User Management'     } :
+    user.role === 'officer'   ? { href: '/my-tasks',  label: 'View My Tasks'       } :
     null
 
   /* Alert: acquittal due (admin only) */
@@ -1132,6 +1266,7 @@ export default function OverviewPage() {
       {user.role === 'executive' && <ExecutiveDashboard requests={requests}   userName={user.name} />}
       {user.role === 'deputy'    && <DeputyDashboard    requests={requests} />}
       {user.role === 'dcs'       && <DCSDashboard       requests={requests} />}
+      {user.role === 'officer'   && <OfficerDashboard   userName={user.name} />}
     </div>
   )
 }

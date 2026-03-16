@@ -11,7 +11,7 @@ import type { Schema } from '@/amplify/data/resource'
 
 const dataClient = generateClient<Schema>()
 
-export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs'
+export type UserRole = 'super' | 'admin' | 'finance' | 'executive' | 'deputy' | 'dcs' | 'officer'
 
 export interface User {
   id: string
