@@ -826,7 +826,7 @@ export default function RequestsPage() {
                     )}
 
                     {/* Closed — show submitted acquittal attachments */}
-                    {req.stage === 'closed' && req.acquittal?.attachments?.length > 0 && (
+                    {req.stage === 'closed' && (req.acquittal?.attachments?.length ?? 0) > 0 && (
                       <div className="mt-3">
                         <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Acquittal Attachments</p>
                         <AttachmentList attachments={req.acquittal.attachments} />
