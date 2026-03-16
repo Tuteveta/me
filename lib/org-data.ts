@@ -71,17 +71,18 @@ export const FUNCTIONAL_AREAS: OrgFunctionalArea[] = [
         title: 'Government Cloud and Information Delivery',
         executiveManager: 'Lizarhmarie Warike',
         activities: [
-          { title: 'Cloud' },
-          { title: 'Standards' },
-          { title: 'Data Governance' },
-          { title: 'Social Media' },
+          { title: 'Cloud',          manager: 'Lizarhmarie Warike' },
+          { title: 'Standards',      manager: 'Bernard Sike' },
+          { title: 'Data Governance', manager: 'Nancy Kanasa' },
         ],
       },
       {
         id: 'devops',
         title: 'DevOps',
         executiveManager: 'Joshua Pomalo',
-        activities: [],
+        activities: [
+          { title: 'DevOps', manager: 'Jesse Biribudo' },
+        ],
       },
       {
         id: 'cybersecurity',
@@ -89,6 +90,7 @@ export const FUNCTIONAL_AREAS: OrgFunctionalArea[] = [
         executiveManager: 'Hamilton Vagi',
         activities: [
           { title: 'Cyber Security' },
+          { title: 'Social Media' },
         ],
       },
     ],
