@@ -31,9 +31,9 @@ function fileIcon(type: string) {
 }
 
 const STAGE_META: Record<RequestStage, { label: string; color: string; bg: string; border: string }> = {
-  pending_em:               { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  pending_em:               { label: 'Awaiting Executive',           color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200' },
   pending_deputy:           { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-200' },
-  pending_dcs:              { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
+  pending_dcs:              { label: 'Awaiting Director',            color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
   pending_finance:          { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200' },
   pending_acquittal:        { label: 'Submit Acquittal Report',      color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
   pending_acquittal_review: { label: 'Acquittal Under Review',       color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' },
@@ -111,7 +111,7 @@ function TrackerBar({ req }: { req: FundingRequest }) {
     ...(cfg.requiresFunding ? ['acquittal' as const] : []),
   ]
   const STEP_LABELS: Record<string, string> = {
-    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp.',
+    em: 'Executive', deputy: 'Deputy', dcs: 'Director',
     finance: 'Finance', acquittal: 'Acquittal',
   }
   return (
@@ -180,7 +180,7 @@ export function RequestMeta({ req }: { req: FundingRequest }) {
 /* ── Audit trail — chronological log of all approver decisions ─────────────── */
 export function AuditTrail({ req }: { req: FundingRequest }) {
   const STEP_LABELS: Record<string, string> = {
-    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Services', finance: 'Finance',
+    em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Secretary',
   }
   const DECISION_STYLE: Record<string, string> = {
     approved: 'bg-green-50 border-green-200 text-green-800',
@@ -711,7 +711,7 @@ export default function RequestsPage() {
                 <div className="flex items-center gap-1 flex-wrap">
                   {typeCfg.steps.map((step, i) => {
                     const labels: Record<string, string> = {
-                      em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Services', finance: 'Finance',
+                      em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Secretary',
                     }
                     return (
                       <div key={step} className="flex items-center gap-1">

@@ -48,12 +48,12 @@ const ROLE_COLORS: Record<UserRole, string> = {
 }
 
 const ROLE_DISPLAY: Record<UserRole, string> = {
-  super:     'Super Admin',
+  super:     'System',
   admin:     'Manager',
-  finance:   'Finance Manager',
-  executive: 'Exec. Manager',
-  deputy:    'Deputy Secretary',
-  dcs:       'Dir. Corporate Services',
+  finance:   'Secretary',
+  executive: 'Executive',
+  deputy:    'Deputy',
+  dcs:       'Director',
   officer:   'Officer',
 }
 

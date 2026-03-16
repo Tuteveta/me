@@ -7,13 +7,13 @@ import { Building2, ChevronDown, ChevronRight, Users, Briefcase, Activity } from
 
 /* ── Role display config ────────────────────────────────────────────────────── */
 const ROLE_CFG: Record<UserRole, { label: string; badge: string }> = {
-  super:     { label: 'Secretary / Super Admin',       badge: 'bg-amber-100 text-amber-800 border-amber-300' },
-  deputy:    { label: 'Deputy Secretary',              badge: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
-  dcs:       { label: 'Dir. Corporate Services',       badge: 'bg-teal-100 text-teal-800 border-teal-300' },
-  executive: { label: 'Executive Manager',             badge: 'bg-purple-100 text-purple-800 border-purple-300' },
-  finance:   { label: 'Finance Manager',               badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-  admin:     { label: 'M&E / Program Manager',         badge: 'bg-blue-100 text-blue-800 border-blue-300' },
-  officer:   { label: 'Officer',                       badge: 'bg-gray-100 text-gray-700 border-gray-300' },
+  super:     { label: 'System',     badge: 'bg-red-100 text-red-800 border-red-300' },
+  deputy:    { label: 'Deputy',     badge: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
+  dcs:       { label: 'Director',   badge: 'bg-teal-100 text-teal-800 border-teal-300' },
+  executive: { label: 'Executive',  badge: 'bg-purple-100 text-purple-800 border-purple-300' },
+  finance:   { label: 'Secretary',  badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  admin:     { label: 'Manager',    badge: 'bg-amber-100 text-amber-800 border-amber-300' },
+  officer:   { label: 'Officer',    badge: 'bg-gray-100 text-gray-700 border-gray-300' },
 }
 
 function RoleBadge({ role }: { role: UserRole }) {

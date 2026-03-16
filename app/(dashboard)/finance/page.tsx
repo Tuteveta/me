@@ -572,7 +572,7 @@ export default function FinancePage() {
               <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-600">No requests yet</p>
               <p className="text-xs text-gray-400 mt-1">
-                Requests appear here once approved by the Executive Manager and Deputy Secretary.
+                Requests appear here once approved by the Executive and Deputy.
               </p>
             </div>
           )}

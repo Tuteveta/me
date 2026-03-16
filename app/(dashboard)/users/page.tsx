@@ -85,11 +85,11 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
               <label className={labelCls}>Role</label>
               <select className={inputCls} value={role} onChange={e => setRole(e.target.value as UserRole)}>
                 <option value="admin">Manager</option>
-                <option value="executive">Executive Manager</option>
-                <option value="deputy">Deputy Secretary</option>
-                <option value="dcs">Dir. Corporate Services</option>
-                <option value="finance">Finance Manager</option>
-                <option value="super">Super Admin</option>
+                <option value="executive">Executive</option>
+                <option value="deputy">Deputy</option>
+                <option value="dcs">Director</option>
+                <option value="finance">Secretary</option>
+                <option value="super">System</option>
               </select>
             </div>
             <div>
@@ -102,11 +102,12 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
 
           {/* Role hint */}
           <div className="bg-gray-50 border border-gray-100 rounded px-3 py-2 text-[11px] text-gray-500">
-            {role === 'super'     && <><span className="font-bold text-red-700">Super Admin:</span> Full system access including user management and audit logs.</>}
+            {role === 'super'     && <><span className="font-bold text-red-700">System:</span> Full system access including user management and audit logs.</>}
             {role === 'admin'     && <><span className="font-bold text-amber-700">Manager:</span> Submits requests, manages workplans, projects, KPIs, and reports.</>}
-            {role === 'executive' && <><span className="font-bold text-purple-700">Executive Manager:</span> First-level approval of M&E funding requests.</>}
-            {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy Secretary:</span> Second-level endorsement before Finance approval.</>}
-            {role === 'finance'   && <><span className="font-bold text-emerald-700">Finance Manager:</span> Reviews and approves programme funding; receives acquittal reports.</>}
+            {role === 'executive' && <><span className="font-bold text-purple-700">Executive:</span> First-level approval of requests.</>}
+            {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy:</span> Second-level endorsement before Secretary approval.</>}
+            {role === 'finance'   && <><span className="font-bold text-emerald-700">Secretary:</span> Reviews and approves programme funding; receives acquittal reports.</>}
+            {role === 'dcs'       && <><span className="font-bold text-teal-700">Director:</span> Reviews requests endorsed by Deputy before Secretary allocation.</>}
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
@@ -262,10 +263,10 @@ export default function UsersPage() {
             >
               {r === 'all' ? `All (${users.length})` :
                r === 'admin' ? `Manager (${users.filter(u => u.role === r).length})` :
-               r === 'executive' ? `Exec. Mgr (${users.filter(u => u.role === r).length})` :
-               r === 'deputy' ? `Deputy Sec. (${users.filter(u => u.role === r).length})` :
-               r === 'dcs' ? `Dir. Corp. (${users.filter(u => u.role === r).length})` :
-               r === 'finance' ? `Finance (${users.filter(u => u.role === r).length})` :
+               r === 'executive' ? `Executive (${users.filter(u => u.role === r).length})` :
+               r === 'deputy' ? `Deputy (${users.filter(u => u.role === r).length})` :
+               r === 'dcs' ? `Director (${users.filter(u => u.role === r).length})` :
+               r === 'finance' ? `Secretary (${users.filter(u => u.role === r).length})` :
                `${r.charAt(0).toUpperCase() + r.slice(1)} (${users.filter(u => u.role === r).length})`}
             </button>
           ))}
@@ -343,7 +344,7 @@ export default function UsersPage() {
         <p className="text-xs font-semibold text-blue-800 mb-2">Role Access Levels</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
           <div>
-            <span className="font-bold text-red-700">Super Admin</span>
+            <span className="font-bold text-red-700">System</span>
             <p className="text-[11px] text-gray-500 mt-0.5">Full system access including user management, settings, and audit logs.</p>
           </div>
           <div>
@@ -351,15 +352,19 @@ export default function UsersPage() {
             <p className="text-[11px] text-gray-500 mt-0.5">Submits requests, manages workplans, projects, KPIs, and reports.</p>
           </div>
           <div>
-            <span className="font-bold text-purple-700">Executive Manager</span>
+            <span className="font-bold text-purple-700">Executive</span>
             <p className="text-[11px] text-gray-500 mt-0.5">First-level approval of requests.</p>
           </div>
           <div>
-            <span className="font-bold text-indigo-700">Deputy Secretary</span>
-            <p className="text-[11px] text-gray-500 mt-0.5">Second-level endorsement of requests before Finance approval.</p>
+            <span className="font-bold text-indigo-700">Deputy</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Second-level endorsement of requests before Secretary approval.</p>
           </div>
           <div>
-            <span className="font-bold text-emerald-700">Finance Manager</span>
+            <span className="font-bold text-teal-700">Director</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Reviews requests endorsed by Deputy before Secretary allocation.</p>
+          </div>
+          <div>
+            <span className="font-bold text-emerald-700">Secretary</span>
             <p className="text-[11px] text-gray-500 mt-0.5">Approves funding based on availability; receives acquittal reports.</p>
           </div>
         </div>

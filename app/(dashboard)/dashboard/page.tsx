@@ -30,9 +30,9 @@ const fmt = (n: number) =>
 const pct = (a: number, b: number) => b === 0 ? 0 : Math.round((a / b) * 100)
 
 const STAGE_META: Record<RequestStage, { label: string; color: string; bg: string }> = {
-  pending_em:               { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50' },
+  pending_em:               { label: 'Awaiting Executive',           color: 'text-amber-700',   bg: 'bg-amber-50' },
   pending_deputy:           { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50' },
-  pending_dcs:              { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50' },
+  pending_dcs:              { label: 'Awaiting Director',            color: 'text-teal-700',    bg: 'bg-teal-50' },
   pending_finance:          { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50' },
   pending_acquittal:        { label: 'Acquittal Due',                color: 'text-orange-700',  bg: 'bg-orange-50' },
   pending_acquittal_review: { label: 'Acquittal Under Review',       color: 'text-teal-700',    bg: 'bg-teal-50' },
@@ -54,12 +54,12 @@ const STAGE_ICON: Record<RequestStage, React.ElementType> = {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  super:     'Super Admin',
+  super:     'System',
   admin:     'Manager',
-  finance:   'Finance Manager',
-  executive: 'Executive Manager',
-  deputy:    'Deputy Secretary',
-  dcs:       'Dir. Corporate Services',
+  finance:   'Secretary',
+  executive: 'Executive',
+  deputy:    'Deputy',
+  dcs:       'Director',
   officer:   'Officer',
 }
 
@@ -184,9 +184,9 @@ function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; w
 
   // Pipeline stage counts
   const pipelineStages: { stage: RequestStage; label: string; color: string }[] = [
-    { stage: 'pending_em',     label: 'Exec. Manager',    color: '#D97706' },
+    { stage: 'pending_em',     label: 'Executive',        color: '#D97706' },
     { stage: 'pending_deputy', label: 'Deputy Sec.',       color: '#7C3AED' },
-    { stage: 'pending_dcs',    label: 'Dir. Corp. Svc',    color: '#0D9488' },
+    { stage: 'pending_dcs',    label: 'Director',          color: '#0D9488' },
     { stage: 'pending_finance', label: 'Finance',          color: '#2563EB' },
     { stage: 'pending_acquittal', label: 'Acquittal Due',  color: '#EA580C' },
   ]
@@ -211,7 +211,7 @@ function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; w
           <SectionHead icon={BarChart3} color="#3B82F6"
             title="Approval Pipeline" desc="Live status of all funding requests across approval stages" />
           {totalReqs === 0 ? (
-            <EmptyPanel message="No requests in the system yet" sub="Requests will appear here once submitted by M&E Managers." />
+            <EmptyPanel message="No requests in the system yet" sub="Requests will appear here once submitted by Managers." />
           ) : (
             <div className="space-y-3">
               {pipelineStages.map(s => {
@@ -524,7 +524,7 @@ function FinanceDashboard({ requests, workplans }: { requests: FundingRequest[];
                       Acquittal Review Required
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white bg-teal-600">{acquittalReview.length}</span>
                     </h2>
-                    <p className="text-xs text-gray-400 mt-0.5">M&E Manager has submitted acquittal reports for your sign-off</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Managers have submitted acquittal reports for your sign-off</p>
                   </div>
                 </div>
                 <Link href="/finance" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
@@ -664,7 +664,7 @@ function ExecutiveDashboard({ requests, userName }: { requests: FundingRequest[]
                     Pending Your Approval
                     {myInbox.length > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white bg-purple-600">{myInbox.length}</span>}
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Funding requests from M&E Manager awaiting your decision</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Funding requests awaiting your decision</p>
                 </div>
               </div>
               <Link href="/approvals" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
@@ -755,9 +755,9 @@ function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
 
   // Stage breakdown
   const stages: { stage: RequestStage; label: string; color: string }[] = [
-    { stage: 'pending_em',      label: 'Exec. Manager', color: '#D97706' },
+    { stage: 'pending_em',      label: 'Executive',     color: '#D97706' },
     { stage: 'pending_deputy',  label: 'Deputy Sec.',   color: '#7C3AED' },
-    { stage: 'pending_dcs',     label: 'Dir. Corp. Svc',color: '#0D9488' },
+    { stage: 'pending_dcs',     label: 'Director',      color: '#0D9488' },
     { stage: 'pending_finance', label: 'Finance',       color: '#2563EB' },
     { stage: 'closed',          label: 'Closed',        color: '#10B981' },
     { stage: 'rejected',        label: 'Rejected',      color: '#EF4444' },
@@ -800,7 +800,7 @@ function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
                     Pending Your Endorsement
                     {myInbox.length > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white bg-indigo-600">{myInbox.length}</span>}
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Requests approved by Executive Manager — awaiting your sign-off</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Requests approved by Executive — awaiting your sign-off</p>
                 </div>
               </div>
               <Link href="/approvals" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
@@ -948,7 +948,7 @@ function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
                     Pending Your Approval
                     {myInbox.length > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white bg-teal-600">{myInbox.length}</span>}
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Requests endorsed by Deputy Secretary — require your sign-off before Finance</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Requests endorsed by Deputy — require your sign-off before Secretary</p>
                 </div>
               </div>
               <Link href="/approvals" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">

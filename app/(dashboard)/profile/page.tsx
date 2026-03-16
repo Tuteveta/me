@@ -5,12 +5,13 @@ import { useAuth } from '@/lib/auth-context'
 import { User, Mail, Building2, Lock, Save, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 const ROLE_LABELS: Record<string, string> = {
-  super:     'Super Admin',
-  admin:     'M&E Manager',
-  finance:   'Finance Manager',
-  executive: 'Executive Manager',
-  deputy:    'Deputy Secretary',
-  dcs:       'Dir. Corporate Services',
+  super:     'System',
+  admin:     'Manager',
+  finance:   'Secretary',
+  executive: 'Executive',
+  deputy:    'Deputy',
+  dcs:       'Director',
+  officer:   'Officer',
 }
 
 const ROLE_COLORS: Record<string, string> = {
