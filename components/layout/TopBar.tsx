@@ -39,7 +39,7 @@ export default function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
   const now = useNow()
 
   return (
-    <header className="h-[48px] bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-5 flex-shrink-0">
+    <header className="h-[48px] bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
 
       {/* Left — hamburger (mobile) + breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
