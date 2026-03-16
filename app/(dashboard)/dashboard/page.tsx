@@ -9,14 +9,13 @@ import {
   Clock, CheckCircle2, XCircle, ArrowRight,
   Send, BadgeCheck, Banknote, ShieldCheck,
   ClipboardList, Target, DollarSign, FolderKanban,
-  FileText, TrendingUp, TrendingDown, Minus,
+  FileText,
   AlertTriangle, BookOpenCheck, Users, Settings,
   Network, BookMarked, PieChart, BarChart3,
   Briefcase, UserCheck, Lock, PauseCircle,
   Building2, Globe, Activity, UserCircle,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage } from '@/types'
-import { WORKPLANS, KPIS, PROJECTS, REPORTS } from '@/lib/mock-data/me-data'
 import { FUNCTIONAL_AREAS } from '@/lib/org-data'
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -477,27 +476,18 @@ function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; w
 /* 2. M&E MANAGER (admin) Dashboard                                             */
 /* ─────────────────────────────────────────────────────────────────────────── */
 function MEDashboard({ requests, workplans, division }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans']; division: string }) {
-  const wpTotal    = WORKPLANS.length
-  const wpApproved = WORKPLANS.filter(w => w.status === 'approved' || w.status === 'active').length
-  const wpPending  = WORKPLANS.filter(w => w.status === 'submitted').length
-  const wpDraft    = WORKPLANS.filter(w => w.status === 'draft').length
+  // Use only this division's data
+  const divWorkplans = workplans.filter(wp => wp.division === division)
+  const wpTotal    = divWorkplans.length
+  const wpApproved = divWorkplans.filter(w => w.status === 'approved' || w.status === 'active').length
+  const wpPending  = divWorkplans.filter(w => w.status === 'submitted').length
+  const wpDraft    = divWorkplans.filter(w => w.status === 'draft').length
 
-  const kpiTotal    = KPIS.length
-  const kpiOnTrack  = KPIS.filter(k => k.status === 'on-track' || k.status === 'exceeded').length
-  const kpiAtRisk   = KPIS.filter(k => k.status === 'at-risk').length
-  const kpiOffTrack = KPIS.filter(k => k.status === 'off-track').length
-
-  const projTotal   = PROJECTS.length
-  const projActive  = PROJECTS.filter(p => p.status === 'active').length
-  const projDelayed = PROJECTS.filter(p => p.status === 'delayed').length
-  const projDone    = PROJECTS.filter(p => p.status === 'completed').length
-  const totalBudget = PROJECTS.reduce((s, p) => s + p.budget, 0)
-  const totalSpent  = PROJECTS.reduce((s, p) => s + p.spent, 0)
-  const burnRate    = pct(totalSpent, totalBudget)
-
-  const rptTotal   = REPORTS.length
-  const rptApproved = REPORTS.filter(r => r.status === 'approved').length
-  const rptOverdue  = REPORTS.filter(r => r.status === 'overdue').length
+  // KPI / Projects / Reports — not yet wired via context; show zeros until live
+  const kpiTotal = 0, kpiOnTrack = 0, kpiAtRisk = 0, kpiOffTrack = 0
+  const projTotal = 0, projActive = 0, projDelayed = 0
+  const totalBudget = 0, totalSpent = 0, burnRate = 0
+  const rptTotal = 0, rptApproved = 0, rptOverdue = 0
 
   const reqPending = requests.filter(r => !['closed', 'rejected'].includes(r.stage)).length
   const reqAcq     = requests.filter(r => r.stage === 'pending_acquittal').length
@@ -538,27 +528,6 @@ function MEDashboard({ requests, workplans, division }: { requests: FundingReque
                   </div>
                 ))}
               </div>
-              {KPIS.slice(0, 5).map(k => {
-                const progress = pct(k.actual, k.target)
-                const rag: 'green' | 'amber' | 'red' = k.status === 'off-track' ? 'red' : k.status === 'at-risk' ? 'amber' : 'green'
-                const TrendIcon = k.trend === 'up' ? TrendingUp : k.trend === 'down' ? TrendingDown : Minus
-                return (
-                  <div key={k.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                    <Rag status={rag} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-800 truncate">{k.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full"
-                            style={{ width: `${progress}%`, background: rag === 'red' ? '#EF4444' : rag === 'amber' ? '#F59E0B' : '#10B981' }} />
-                        </div>
-                        <span className="text-[10px] text-gray-500 shrink-0">{k.actual}/{k.target} {k.unit}</span>
-                      </div>
-                    </div>
-                    <TrendIcon className={`w-3.5 h-3.5 shrink-0 ${k.trend === 'up' ? 'text-emerald-500' : k.trend === 'down' ? 'text-red-400' : 'text-gray-300'}`} />
-                  </div>
-                )
-              })}
             </div>
           )}
         </div>
@@ -584,7 +553,7 @@ function MEDashboard({ requests, workplans, division }: { requests: FundingReque
                   </div>
                 ))}
               </div>
-              {WORKPLANS.slice(0, 5).map(w => (
+              {divWorkplans.slice(0, 5).map(w => (
                 <div key={w.id} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
                   <Rag status={w.status === 'approved' || w.status === 'active' ? 'green' : w.status === 'submitted' ? 'amber' : 'red'} />
                   <div className="flex-1 min-w-0">
@@ -1387,9 +1356,15 @@ export default function OverviewPage() {
   const { workplans } = useWorkplan()
   if (!user) return null
 
-  const myRequests = user.role === 'admin'
-    ? requests.filter(r => r.submittedBy === user.name)
-    : requests
+  // System-wide roles (super, deputy, finance) see all requests.
+  // Division-scoped roles see only their own division's requests (+ anything they personally submitted).
+  const myRequests =
+    user.role === 'super' || user.role === 'deputy' || user.role === 'finance'
+      ? requests
+      : requests.filter(r =>
+          r.division === user.division ||
+          r.submittedBy === user.name
+        )
 
   const now = new Date().toLocaleDateString('en-PG', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -1411,11 +1386,11 @@ export default function OverviewPage() {
     ? myRequests.filter(r => r.stage === 'pending_acquittal').length
     : 0
 
-  /* Action badges per role */
+  /* Action badges per role (use myRequests so division-scoped roles only count their own) */
   const actionBadge =
-    user.role === 'executive' ? requests.filter(r => r.stage === 'pending_em').length :
+    user.role === 'executive' ? myRequests.filter(r => r.stage === 'pending_em').length :
     user.role === 'deputy'    ? requests.filter(r => r.stage === 'pending_deputy').length :
-    user.role === 'dcs'       ? requests.filter(r => r.stage === 'pending_dcs').length :
+    user.role === 'dcs'       ? myRequests.filter(r => r.stage === 'pending_dcs').length :
     user.role === 'finance'   ? requests.filter(r => r.stage === 'pending_finance' || r.stage === 'pending_acquittal_review').length :
     0
 
@@ -1465,13 +1440,13 @@ export default function OverviewPage() {
       </div>
 
       {/* Role-specific dashboard body */}
-      {user.role === 'super'     && <SuperDashboard    requests={requests}   workplans={workplans} />}
-      {user.role === 'admin'     && <MEDashboard        requests={myRequests} workplans={workplans} division={user.division} />}
-      {user.role === 'finance'   && <FinanceDashboard   requests={requests}   workplans={workplans} />}
-      {user.role === 'executive' && <ExecutiveDashboard requests={requests}   workplans={workplans} division={user.division} userName={user.name} />}
-      {user.role === 'deputy'    && <DeputyDashboard    requests={requests}   workplans={workplans} />}
-      {user.role === 'dcs'       && <DCSDashboard       requests={requests}   workplans={workplans} division={user.division} />}
-      {user.role === 'officer'   && <OfficerDashboard   userName={user.name}  workplans={workplans} requests={requests} division={user.division} />}
+      {user.role === 'super'     && <SuperDashboard    requests={requests}    workplans={workplans} />}
+      {user.role === 'admin'     && <MEDashboard        requests={myRequests}  workplans={workplans} division={user.division} />}
+      {user.role === 'finance'   && <FinanceDashboard   requests={requests}    workplans={workplans} />}
+      {user.role === 'executive' && <ExecutiveDashboard requests={myRequests}  workplans={workplans} division={user.division} userName={user.name} />}
+      {user.role === 'deputy'    && <DeputyDashboard    requests={requests}    workplans={workplans} />}
+      {user.role === 'dcs'       && <DCSDashboard       requests={myRequests}  workplans={workplans} division={user.division} />}
+      {user.role === 'officer'   && <OfficerDashboard   userName={user.name}   workplans={workplans} requests={myRequests} division={user.division} />}
     </div>
   )
 }
