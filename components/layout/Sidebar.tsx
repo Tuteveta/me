@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: ClipboardList,   label: 'Annual Workplan',    href: '/workplan',      roles: ['super', 'admin', 'finance'] },
   { icon: Settings,        label: 'Settings',           href: '/settings',      roles: ['super', 'admin'] },
   { icon: Users,           label: 'User Management',    href: '/users',         roles: ['super'] },
-  { icon: SendHorizonal,   label: 'My Requests',        href: '/requests',      roles: ['admin'] },
+  { icon: SendHorizonal,   label: 'My Requests',        href: '/requests',      roles: ['admin', 'executive', 'deputy', 'dcs'] },
   { icon: BadgeCheck,      label: 'Approvals',          href: '/approvals',     roles: ['executive', 'deputy', 'dcs'] },
   { icon: Banknote,        label: 'Finance',            href: '/finance',       roles: ['finance'] },
   { icon: UserCheck,       label: 'My Team',            href: '/my-team',       roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },

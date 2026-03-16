@@ -375,7 +375,7 @@ function AcquittalForm({ req, onSubmit }: {
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function RequestsPage() {
   const { user } = useAuth()
-  if (user && user.role !== 'admin') redirect('/dashboard')
+  if (user && !['admin', 'executive', 'deputy', 'dcs'].includes(user.role)) redirect('/dashboard')
 
   const { requests, submit, submitAcquittal } = useFunding()
   const { workplans } = useWorkplan()
