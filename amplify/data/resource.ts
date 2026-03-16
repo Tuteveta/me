@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { adminUserFn } from '../functions/admin-user/resource'
 
 // DICT M&E Dashboard – Amplify Data Schema
 // Model and enum names mirror the frontend TypeScript types in types/index.ts
@@ -222,6 +223,26 @@ const schema = a.schema({
       updatedAt:      a.string(),
     })
     .authorization((allow) => [allow.authenticated()]),
+
+  // ── Cognito admin mutation (super-admin only) ────────────────────────────
+  // Routes create / delete / updateAttributes calls through a Lambda that
+  // holds AdminCreateUser, AdminDeleteUser, AdminUpdateUserAttributes
+  // permissions on the Cognito User Pool.
+  adminCognitoUser: a.mutation()
+    .arguments({
+      action:   a.string().required(),   // 'create' | 'delete' | 'updateAttributes'
+      email:    a.string().required(),
+      name:     a.string(),
+      password: a.string(),
+      role:     a.string(),
+      division: a.string(),
+    })
+    .returns(a.customType({
+      success: a.boolean().required(),
+      error:   a.string(),
+    }))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(adminUserFn)),
 
   // ── Managed Users (super-admin provisioned) ──────────────────────────────
   ManagedUser: a
