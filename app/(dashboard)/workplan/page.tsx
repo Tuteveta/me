@@ -5,7 +5,7 @@ import { useWorkplan } from '@/lib/workplan-context'
 import { useAuth } from '@/lib/auth-context'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
 import { DICT_DIVISIONS } from '@/lib/org-data'
-import { PRIORITIES } from '@/lib/corporate-plan-data'
+import { useCorporatePlan } from '@/lib/corporate-plan-context'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
   CheckCircle, Clock, FileEdit, Send, X, ClipboardList,
@@ -41,6 +41,7 @@ function NewWorkplanModal({
   onCreate: (wp: AnnualWorkplan) => void
   createdBy: string
 }) {
+  const { priorities: PRIORITIES } = useCorporatePlan()
   const [title, setTitle]         = useState('')
   const [year, setYear]           = useState('FY 2025/26')
   const [period, setPeriod]       = useState('Jul 2025 – Jun 2026')

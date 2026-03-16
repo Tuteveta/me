@@ -208,6 +208,21 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // ── Corporate Plan (super-admin managed, all users read) ─────────────────
+  CorporatePlan: a
+    .model({
+      title:          a.string().required(),
+      period:         a.string().required(),
+      vision:         a.string().required(),
+      mission:        a.string().required(),
+      endorsedBy:     a.string(),
+      lastReviewed:   a.string(),
+      prioritiesJson: a.string().required(), // StrategicPriority[] as JSON
+      createdBy:      a.string().required(),
+      updatedAt:      a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // ── Managed Users (super-admin provisioned) ──────────────────────────────
   ManagedUser: a
     .model({

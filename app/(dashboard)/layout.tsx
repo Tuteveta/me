@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { FundingProvider } from '@/lib/funding-context'
 import { WorkplanProvider } from '@/lib/workplan-context'
 import { TeamProvider } from '@/lib/team-context'
+import { CorporatePlanProvider } from '@/lib/corporate-plan-context'
 import DashboardShell from '@/components/layout/DashboardShell'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -32,12 +33,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null
 
   return (
-    <WorkplanProvider>
-      <FundingProvider>
-        <TeamProvider>
-          <DashboardShell>{children}</DashboardShell>
-        </TeamProvider>
-      </FundingProvider>
-    </WorkplanProvider>
+    <CorporatePlanProvider>
+      <WorkplanProvider>
+        <FundingProvider>
+          <TeamProvider>
+            <DashboardShell>{children}</DashboardShell>
+          </TeamProvider>
+        </FundingProvider>
+      </WorkplanProvider>
+    </CorporatePlanProvider>
   )
 }
