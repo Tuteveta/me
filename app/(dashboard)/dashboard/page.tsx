@@ -22,23 +22,27 @@ const fmt = (n: number) =>
 const pct = (a: number, b: number) => b === 0 ? 0 : Math.round((a / b) * 100)
 
 const STAGE_META: Record<RequestStage, { label: string; color: string; bg: string }> = {
-  pending_em:        { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50' },
-  pending_deputy:    { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50' },
-  pending_dcs:       { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50' },
-  pending_finance:   { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50' },
-  pending_acquittal: { label: 'Acquittal Due',                color: 'text-orange-700',  bg: 'bg-orange-50' },
-  closed:            { label: 'Closed',                       color: 'text-emerald-700', bg: 'bg-emerald-50' },
-  rejected:          { label: 'Rejected',                     color: 'text-red-700',     bg: 'bg-red-50' },
+  pending_em:               { label: 'Awaiting Exec. Manager',       color: 'text-amber-700',   bg: 'bg-amber-50' },
+  pending_deputy:           { label: 'Awaiting Deputy Sec.',         color: 'text-purple-700',  bg: 'bg-purple-50' },
+  pending_dcs:              { label: 'Awaiting Dir. Corp. Services', color: 'text-teal-700',    bg: 'bg-teal-50' },
+  pending_finance:          { label: 'Awaiting Finance',             color: 'text-blue-700',    bg: 'bg-blue-50' },
+  pending_acquittal:        { label: 'Acquittal Due',                color: 'text-orange-700',  bg: 'bg-orange-50' },
+  pending_acquittal_review: { label: 'Acquittal Under Review',       color: 'text-teal-700',    bg: 'bg-teal-50' },
+  closed:                   { label: 'Closed',                       color: 'text-emerald-700', bg: 'bg-emerald-50' },
+  rejected:                 { label: 'Rejected',                     color: 'text-red-700',     bg: 'bg-red-50' },
+  deferred:                 { label: 'On Hold / Deferred',           color: 'text-yellow-700',  bg: 'bg-yellow-50' },
 }
 
 const STAGE_ICON: Record<RequestStage, React.ElementType> = {
-  pending_em:        Clock,
-  pending_deputy:    Clock,
-  pending_dcs:       Clock,
-  pending_finance:   Clock,
-  pending_acquittal: BookOpenCheck,
-  closed:            CheckCircle2,
-  rejected:          XCircle,
+  pending_em:               Clock,
+  pending_deputy:           Clock,
+  pending_dcs:              Clock,
+  pending_finance:          Clock,
+  pending_acquittal:        BookOpenCheck,
+  pending_acquittal_review: BookOpenCheck,
+  closed:                   CheckCircle2,
+  rejected:                 XCircle,
+  deferred:                 Clock,
 }
 
 const ROLE_LABELS: Record<string, string> = {
