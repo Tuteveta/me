@@ -4,11 +4,13 @@ export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'delayed' | 'pl
 export type KPIStatus = 'on-track' | 'at-risk' | 'off-track' | 'exceeded'
 export type ReportStatus = 'submitted' | 'pending' | 'overdue' | 'approved'
 export type ProgramArea =
-  | 'Infrastructure'
-  | 'Digital Transformation'
-  | 'Capacity Building'
-  | 'eGovernment'
-  | 'Cybersecurity'
+  | 'Policy & M/E'
+  | 'Partnership & Sector Funding'
+  | 'Government Cloud & Information Delivery'
+  | 'DevOps'
+  | 'Cyber Security'
+  | 'Corporate Services'
+  | 'Executive Services'
 
 // ── Projects ──────────────────────────────────────────────
 export interface Project {

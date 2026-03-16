@@ -15,7 +15,7 @@ const STATUS_CONFIG: Record<KPIStatus, { label: string; badge: string; dot: stri
 }
 
 const PROGRAMS: (ProgramArea | 'All')[] = [
-  'All', 'Infrastructure', 'Digital Transformation', 'Capacity Building', 'eGovernment', 'Cybersecurity',
+  'All', 'Policy & M/E', 'Partnership & Sector Funding', 'Government Cloud & Information Delivery', 'DevOps', 'Cyber Security', 'Corporate Services', 'Executive Services',
 ]
 
 const TREND_ICONS = { up: TrendingUp, down: TrendingDown, stable: Minus }
@@ -46,7 +46,7 @@ export default function KPIPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-base font-bold text-gray-900">KPI Monitoring</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{KPIS.length} indicators tracked across 5 programme areas</p>
+          <p className="text-xs text-gray-400 mt-0.5">{KPIS.length} indicators tracked across 7 programme areas</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded">

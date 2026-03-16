@@ -7,18 +7,9 @@ import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '@/amplify/data/resource'
 import type { ManagedUser, UserRole } from '@/types'
 import { UserPlus, Search, MoreVertical, CheckCircle, XCircle, X, RefreshCw } from 'lucide-react'
+import { DICT_DIVISIONS } from '@/lib/org-data'
 
 const client = generateClient<Schema>()
-
-const DIVISIONS = [
-  'ICT Infrastructure',
-  'M&E Division',
-  'Digital Services',
-  'Policy & Planning',
-  'Cybersecurity',
-  'eGovernment Services',
-  'Capacity Building',
-]
 
 function uid() {
   return Math.random().toString(36).slice(2, 9)
@@ -28,7 +19,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [role, setRole]         = useState<UserRole>('admin')
-  const [division, setDivision] = useState(DIVISIONS[0])
+  const [division, setDivision] = useState(DICT_DIVISIONS[0])
   const [error, setError]       = useState('')
 
   const [saving, setSaving] = useState(false)
@@ -104,7 +95,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             <div>
               <label className={labelCls}>Division</label>
               <select className={inputCls} value={division} onChange={e => setDivision(e.target.value)}>
-                {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                {DICT_DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           </div>

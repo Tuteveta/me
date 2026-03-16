@@ -8,7 +8,7 @@ import type { UserRole } from '@/lib/auth-context'
 import {
   LayoutDashboard, FolderKanban, Target, FileText,
   Settings, Users, ChevronLeft, ChevronRight, LogOut, ClipboardList, X, Banknote,
-  SendHorizonal, BadgeCheck, UserCircle,
+  SendHorizonal, BadgeCheck, UserCircle, Network,
 } from 'lucide-react'
 
 interface NavItem {
@@ -19,8 +19,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Overview',       href: '/dashboard', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
-  { icon: FolderKanban,    label: 'Projects',        href: '/projects',  roles: ['super', 'admin'] },
+  { icon: LayoutDashboard, label: 'Overview',       href: '/dashboard',     roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: Network,         label: 'Organisation',    href: '/organisation', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: FolderKanban,    label: 'Projects',        href: '/projects',     roles: ['super', 'admin'] },
   { icon: Target,          label: 'KPI Monitoring',  href: '/kpi',       roles: ['super', 'admin'] },
   { icon: FileText,        label: 'Reports',         href: '/reports',   roles: ['super', 'admin'] },
   { icon: ClipboardList,   label: 'Annual Workplan', href: '/workplan',  roles: ['super', 'admin', 'finance'] },

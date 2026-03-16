@@ -28,11 +28,13 @@ const schema = a.schema({
   ]),
 
   ProgramArea: a.enum([
-    'Infrastructure',
-    'Digital_Transformation',
-    'Capacity_Building',
-    'eGovernment',
-    'Cybersecurity',
+    'Policy_and_ME',
+    'Partnership_Sector',
+    'Government_Cloud',
+    'DevOps',
+    'Cyber_Security',
+    'Corporate_Services',
+    'Executive_Services',
   ]),
 
   // ── Custom types (embedded objects) ─────────────────────────────────────

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useWorkplan } from '@/lib/workplan-context'
 import { useAuth } from '@/lib/auth-context'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
+import { DICT_DIVISIONS } from '@/lib/org-data'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
   CheckCircle, Clock, FileEdit, Send, X, ClipboardList,
@@ -17,10 +18,6 @@ const STATUS_CFG: Record<WorkplanStatus, { label: string; badge: string }> = {
   active:    { label: 'Active',    badge: 'bg-amber-50 text-amber-700' },
 }
 
-const DIVISIONS = [
-  'M&E Division', 'ICT Infrastructure', 'Digital Services',
-  'Policy & Planning', 'Cybersecurity', 'eGovernment Services', 'Capacity Building',
-]
 
 function uid() {
   return Math.random().toString(36).slice(2, 9)
@@ -45,7 +42,7 @@ function NewWorkplanModal({
   const [title, setTitle]       = useState('')
   const [year, setYear]         = useState('FY 2025/26')
   const [period, setPeriod]     = useState('Jul 2025 – Jun 2026')
-  const [division, setDivision] = useState(DIVISIONS[0])
+  const [division, setDivision] = useState(DICT_DIVISIONS[0])
   const [budget, setBudget]     = useState('')
   const [objective, setObjective] = useState('')
   const [error, setError]       = useState('')
@@ -114,7 +111,7 @@ function NewWorkplanModal({
             <div>
               <label className={labelCls}>Division</label>
               <select className={inputCls} value={division} onChange={e => setDivision(e.target.value)}>
-                {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                {DICT_DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div>
