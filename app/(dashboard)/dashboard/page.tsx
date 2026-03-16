@@ -171,6 +171,190 @@ function QuickLink({ icon: Icon, label, href, color }: { icon: React.ElementType
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
+/* DivisionBudgetPanel                                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+function DivisionBudgetPanel({
+  division,
+  workplans,
+  requests,
+  title,
+}: {
+  division: string | null
+  workplans: ReturnType<typeof useWorkplan>['workplans']
+  requests: FundingRequest[]
+  title?: string
+}) {
+  // Helper to compute budget numbers for a given division (or all if null)
+  function calcBudget(div: string | null) {
+    const totalBudget = workplans
+      .filter(wp => (div === null || wp.division === div) && (wp.status === 'approved' || wp.status === 'active'))
+      .reduce((s, wp) => s + wp.budget, 0)
+
+    const committed = requests
+      .filter(req => (div === null || req.division === div) && req.finance.decision === 'approved')
+      .reduce((s, req) => s + req.amount, 0)
+
+    const inPipeline = requests
+      .filter(req =>
+        (div === null || req.division === div) &&
+        (['pending_em', 'pending_deputy', 'pending_dcs', 'pending_finance'] as RequestStage[]).includes(req.stage)
+      )
+      .reduce((s, req) => s + req.amount, 0)
+
+    const available = Math.max(0, totalBudget - committed)
+    const burnPct = totalBudget > 0 ? Math.min(100, Math.round((committed / totalBudget) * 100)) : 0
+    const pipelinePct = totalBudget > 0 ? Math.min(100, Math.round((inPipeline / totalBudget) * 100)) : 0
+
+    return { totalBudget, committed, inPipeline, available, burnPct, pipelinePct }
+  }
+
+  if (division !== null) {
+    // Single-division card
+    const { totalBudget, committed, inPipeline, available, burnPct, pipelinePct } = calcBudget(division)
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <PieChart className="w-4 h-4 text-blue-600" />
+            <h2 className="text-sm font-bold text-gray-900">{title ?? 'Division Budget'}</h2>
+          </div>
+          <Link href="/budget" className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+            Budget <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        {totalBudget === 0 ? (
+          <p className="text-xs text-gray-400 text-center py-3">No approved workplan budget found for this division.</p>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                <span>Committed</span>
+                <span className="font-semibold text-gray-600">{burnPct}% of {fmt(totalBudget)}</span>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                <div className="h-full bg-emerald-500 rounded-l-full transition-all" style={{ width: `${burnPct}%` }} />
+                {pipelinePct > 0 && <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.min(pipelinePct, 100 - burnPct)}%` }} />}
+              </div>
+              <div className="flex gap-2 mt-1.5 flex-wrap">
+                <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Committed: {fmt(committed)}</span>
+                {inPipeline > 0 && <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />In Pipeline: {fmt(inPipeline)}</span>}
+                <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-gray-200 inline-block" />Available: {fmt(available)}</span>
+              </div>
+            </div>
+            {[
+              { label: 'Total Budget', value: fmt(totalBudget), color: 'text-gray-900' },
+              { label: 'Committed',    value: fmt(committed),   color: 'text-emerald-600' },
+              { label: 'In Pipeline',  value: fmt(inPipeline),  color: 'text-amber-600' },
+              { label: 'Available',    value: fmt(available),   color: available > 0 ? 'text-blue-600' : 'text-red-600' },
+            ].map(s => (
+              <div key={s.label} className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">{s.label}</span>
+                <span className={`text-xs font-bold ${s.color}`}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // All-divisions grid
+  const divisions = Array.from(new Set(workplans.map(w => w.division)))
+
+  if (divisions.length === 0) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <PieChart className="w-4 h-4 text-blue-600" />
+          <h2 className="text-sm font-bold text-gray-900">{title ?? 'Budget by Division'}</h2>
+        </div>
+        <p className="text-xs text-gray-400 text-center py-3">No approved workplan budgets found.</p>
+      </div>
+    )
+  }
+
+  const grand = calcBudget(null)
+  const divStats = divisions.map(div => ({ div, ...calcBudget(div) }))
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <PieChart className="w-4 h-4 text-blue-600" />
+          <h2 className="text-sm font-bold text-gray-900">{title ?? 'Budget by Division'}</h2>
+        </div>
+        <Link href="/budget" className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+          Budget <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      {/* Grand total summary */}
+      <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">System-Wide Totals</p>
+        <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+          <span>Committed</span>
+          <span className="font-semibold text-gray-600">{grand.burnPct}% of {fmt(grand.totalBudget)}</span>
+        </div>
+        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden flex mb-2">
+          <div className="h-full bg-emerald-500 rounded-l-full transition-all" style={{ width: `${grand.burnPct}%` }} />
+          {grand.pipelinePct > 0 && <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.min(grand.pipelinePct, 100 - grand.burnPct)}%` }} />}
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          {[
+            { label: 'Total Budget', value: fmt(grand.totalBudget), color: 'text-gray-900' },
+            { label: 'Committed',    value: fmt(grand.committed),   color: 'text-emerald-600' },
+            { label: 'In Pipeline',  value: fmt(grand.inPipeline),  color: 'text-amber-600' },
+            { label: 'Available',    value: fmt(grand.available),   color: grand.available > 0 ? 'text-blue-600' : 'text-red-600' },
+          ].map(s => (
+            <div key={s.label} className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-500">{s.label}</span>
+              <span className={`text-[10px] font-bold ${s.color}`}>{s.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-division grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {divStats.map(({ div, totalBudget, committed, available, burnPct, pipelinePct }) => (
+          <div key={div} className="border border-gray-100 rounded-lg p-3 bg-gray-50/50">
+            <p className="text-[11px] font-bold text-gray-800 truncate mb-2">{div}</p>
+            {totalBudget === 0 ? (
+              <p className="text-[10px] text-gray-400">No approved budget</p>
+            ) : (
+              <>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex mb-1.5">
+                  <div className="h-full bg-emerald-500 rounded-l-full transition-all" style={{ width: `${burnPct}%` }} />
+                  {pipelinePct > 0 && <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.min(pipelinePct, 100 - burnPct)}%` }} />}
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-gray-400">Budget</span>
+                    <span className="text-[10px] font-bold text-gray-700">{fmt(totalBudget)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-gray-400">Committed</span>
+                    <span className="text-[10px] font-bold text-emerald-600">{fmt(committed)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-gray-400">Available</span>
+                    <span className={`text-[10px] font-bold ${available > 0 ? 'text-blue-600' : 'text-red-500'}`}>{fmt(available)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-gray-400">Burn</span>
+                    <span className="text-[10px] font-bold text-gray-600">{burnPct}%</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 /* 1. SUPER ADMIN Dashboard                                                     */
 /* ─────────────────────────────────────────────────────────────────────────── */
 function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans'] }) {
@@ -261,6 +445,9 @@ function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; w
         </div>
       </div>
 
+      {/* Budget by Division */}
+      <DivisionBudgetPanel division={null} workplans={workplans} requests={requests} title="Budget by Division" />
+
       {/* All recent requests */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -289,7 +476,7 @@ function SuperDashboard({ requests, workplans }: { requests: FundingRequest[]; w
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* 2. M&E MANAGER (admin) Dashboard                                             */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function MEDashboard({ requests }: { requests: FundingRequest[] }) {
+function MEDashboard({ requests, workplans, division }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans']; division: string }) {
   const wpTotal    = WORKPLANS.length
   const wpApproved = WORKPLANS.filter(w => w.status === 'approved' || w.status === 'active').length
   const wpPending  = WORKPLANS.filter(w => w.status === 'submitted').length
@@ -414,6 +601,9 @@ function MEDashboard({ requests }: { requests: FundingRequest[] }) {
           )}
         </div>
       </div>
+
+      {/* Division Budget */}
+      <DivisionBudgetPanel division={division} workplans={workplans} requests={requests} title="My Division Budget" />
 
       {/* My Funding Requests */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -586,6 +776,9 @@ function FinanceDashboard({ requests, workplans }: { requests: FundingRequest[];
             )}
           </div>
 
+          {/* Budget by Division */}
+          <DivisionBudgetPanel division={null} workplans={workplans} requests={requests} title="Budget by Division" />
+
           {/* Quick links */}
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Quick Links</p>
@@ -620,7 +813,7 @@ function FinanceDashboard({ requests, workplans }: { requests: FundingRequest[];
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* 4. EXECUTIVE MANAGER Dashboard                                               */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function ExecutiveDashboard({ requests, userName }: { requests: FundingRequest[]; userName: string }) {
+function ExecutiveDashboard({ requests, workplans, division, userName }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans']; division: string; userName: string }) {
   const myInbox    = requests.filter(r => r.stage === 'pending_em')
   const inProgress = requests.filter(r => !['closed','rejected','pending_em'].includes(r.stage))
   const closed     = requests.filter(r => r.stage === 'closed')
@@ -726,6 +919,9 @@ function ExecutiveDashboard({ requests, userName }: { requests: FundingRequest[]
             </div>
           </div>
 
+          {/* Division Budget */}
+          <DivisionBudgetPanel division={division} workplans={workplans} requests={requests} title="My Division Budget" />
+
           {/* Quick links */}
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Quick Links</p>
@@ -745,7 +941,7 @@ function ExecutiveDashboard({ requests, userName }: { requests: FundingRequest[]
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* 5. DEPUTY SECRETARY Dashboard                                                */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
+function DeputyDashboard({ requests, workplans }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans'] }) {
   const myInbox    = requests.filter(r => r.stage === 'pending_deputy')
   const totalReqs  = requests.length
   const inProgress = requests.filter(r => !['closed','rejected'].includes(r.stage)).length
@@ -893,6 +1089,9 @@ function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
               ))}
             </div>
           </div>
+
+          {/* Budget by Division */}
+          <DivisionBudgetPanel division={null} workplans={workplans} requests={requests} title="Budget by Division" />
         </div>
       </div>
     </div>
@@ -902,7 +1101,7 @@ function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* 6. DIRECTOR CORPORATE SERVICES Dashboard                                     */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
+function DCSDashboard({ requests, workplans, division }: { requests: FundingRequest[]; workplans: ReturnType<typeof useWorkplan>['workplans']; division: string }) {
   const myInbox    = requests.filter(r => r.stage === 'pending_dcs')
   const inProgress = requests.filter(r => !['closed','rejected'].includes(r.stage)).length
   const closed     = requests.filter(r => r.stage === 'closed').length
@@ -1026,6 +1225,9 @@ function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
             </div>
           </div>
 
+          {/* Division Budget */}
+          <DivisionBudgetPanel division={division} workplans={workplans} requests={requests} title="My Division Budget" />
+
           {/* Quick Links */}
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Quick Links</p>
@@ -1045,7 +1247,7 @@ function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* 7. OFFICER Dashboard                                                          */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function OfficerDashboard({ userName }: { userName: string }) {
+function OfficerDashboard({ userName, workplans, requests, division }: { userName: string; workplans: ReturnType<typeof useWorkplan>['workplans']; requests: FundingRequest[]; division: string }) {
   const { officers, tasksByOfficer } = useTeam()
 
   const myRecord = officers.find(o => o.name === userName)
@@ -1147,6 +1349,9 @@ function OfficerDashboard({ userName }: { userName: string }) {
 
         {/* Quick links */}
         <div className="space-y-4">
+          {/* Division Budget */}
+          <DivisionBudgetPanel division={division} workplans={workplans} requests={requests} title="My Division Budget" />
+
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Quick Links</p>
             <div className="space-y-2">
@@ -1261,12 +1466,12 @@ export default function OverviewPage() {
 
       {/* Role-specific dashboard body */}
       {user.role === 'super'     && <SuperDashboard    requests={requests}   workplans={workplans} />}
-      {user.role === 'admin'     && <MEDashboard        requests={myRequests} />}
+      {user.role === 'admin'     && <MEDashboard        requests={myRequests} workplans={workplans} division={user.division} />}
       {user.role === 'finance'   && <FinanceDashboard   requests={requests}   workplans={workplans} />}
-      {user.role === 'executive' && <ExecutiveDashboard requests={requests}   userName={user.name} />}
-      {user.role === 'deputy'    && <DeputyDashboard    requests={requests} />}
-      {user.role === 'dcs'       && <DCSDashboard       requests={requests} />}
-      {user.role === 'officer'   && <OfficerDashboard   userName={user.name} />}
+      {user.role === 'executive' && <ExecutiveDashboard requests={requests}   workplans={workplans} division={user.division} userName={user.name} />}
+      {user.role === 'deputy'    && <DeputyDashboard    requests={requests}   workplans={workplans} />}
+      {user.role === 'dcs'       && <DCSDashboard       requests={requests}   workplans={workplans} division={user.division} />}
+      {user.role === 'officer'   && <OfficerDashboard   userName={user.name}  workplans={workplans} requests={requests} division={user.division} />}
     </div>
   )
 }
