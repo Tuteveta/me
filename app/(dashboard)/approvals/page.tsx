@@ -19,7 +19,7 @@ const fmt = (n: number) =>
 function TrackerBar({ req, highlightStage }: { req: FundingRequest; highlightStage: 'em' | 'deputy' | 'dcs' }) {
   const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
   const STEP_LABELS: Record<string, string> = {
-    em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Secretary',
+    em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Finance Manager',
   }
   const stepKeys = cfg.steps
   return (
@@ -308,7 +308,7 @@ export default function ApprovalsPage() {
               ? 'Review funding requests submitted by Managers'
               : stage === 'deputy'
               ? 'Review requests endorsed by the Executive'
-              : 'Review requests endorsed by the Deputy before Secretary allocation'}
+              : 'Review requests endorsed by the Deputy before Finance Manager approval'}
           </p>
         </div>
         <button

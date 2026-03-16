@@ -56,7 +56,7 @@ const STAGE_ICON: Record<RequestStage, React.ElementType> = {
 const ROLE_LABELS: Record<string, string> = {
   super:     'System',
   admin:     'Manager',
-  finance:   'Secretary',
+  finance:   'Finance Manager',
   executive: 'Executive',
   deputy:    'Deputy',
   dcs:       'Director',
@@ -948,7 +948,7 @@ function DCSDashboard({ requests }: { requests: FundingRequest[] }) {
                     Pending Your Approval
                     {myInbox.length > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white bg-teal-600">{myInbox.length}</span>}
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Requests endorsed by Deputy — require your sign-off before Secretary</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Requests endorsed by Deputy — require your sign-off before Finance Manager</p>
                 </div>
               </div>
               <Link href="/approvals" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">

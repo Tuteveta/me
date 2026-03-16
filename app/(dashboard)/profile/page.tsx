@@ -7,7 +7,7 @@ import { User, Mail, Building2, Lock, Save, CheckCircle2, AlertCircle, Eye, EyeO
 const ROLE_LABELS: Record<string, string> = {
   super:     'System',
   admin:     'Manager',
-  finance:   'Secretary',
+  finance:   'Finance Manager',
   executive: 'Executive',
   deputy:    'Deputy',
   dcs:       'Director',

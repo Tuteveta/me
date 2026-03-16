@@ -11,7 +11,7 @@ const ROLE_CFG: Record<UserRole, { label: string; badge: string }> = {
   deputy:    { label: 'Deputy',     badge: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
   dcs:       { label: 'Director',   badge: 'bg-teal-100 text-teal-800 border-teal-300' },
   executive: { label: 'Executive',  badge: 'bg-purple-100 text-purple-800 border-purple-300' },
-  finance:   { label: 'Secretary',  badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  finance:   { label: 'Finance Manager',  badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
   admin:     { label: 'Manager',    badge: 'bg-amber-100 text-amber-800 border-amber-300' },
   officer:   { label: 'Officer',    badge: 'bg-gray-100 text-gray-700 border-gray-300' },
 }

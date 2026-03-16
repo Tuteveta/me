@@ -32,7 +32,7 @@ const ROLE_LABEL: Record<string, string> = {
   executive: 'Executive',
   deputy:    'Deputy',
   dcs:       'Director',
-  finance:   'Secretary',
+  finance:   'Finance Manager',
   officer:   'Officer',
 }
 
@@ -89,7 +89,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
                 <option value="executive">Executive</option>
                 <option value="deputy">Deputy</option>
                 <option value="dcs">Director</option>
-                <option value="finance">Secretary</option>
+                <option value="finance">Finance Manager</option>
                 <option value="officer">Officer</option>
                 <option value="super">System</option>
               </select>
@@ -105,9 +105,9 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             {role === 'super'     && <><span className="font-bold text-red-700">System:</span> Full system access including user management and audit logs.</>}
             {role === 'admin'     && <><span className="font-bold text-amber-700">Manager:</span> Submits requests, manages workplans, projects, KPIs, and reports.</>}
             {role === 'executive' && <><span className="font-bold text-purple-700">Executive:</span> First-level approval of requests.</>}
-            {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy:</span> Second-level endorsement before Secretary approval.</>}
-            {role === 'finance'   && <><span className="font-bold text-emerald-700">Secretary:</span> Reviews and approves programme funding; receives acquittal reports.</>}
-            {role === 'dcs'       && <><span className="font-bold text-teal-700">Director:</span> Reviews requests endorsed by Deputy before Secretary allocation.</>}
+            {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy:</span> Second-level endorsement before Finance Manager approval.</>}
+            {role === 'finance'   && <><span className="font-bold text-emerald-700">Finance Manager:</span> Reviews and approves programme funding; receives acquittal reports.</>}
+            {role === 'dcs'       && <><span className="font-bold text-teal-700">Director:</span> Reviews requests endorsed by Deputy before Finance Manager approval.</>}
             {role === 'officer'   && <><span className="font-bold text-gray-700">Officer:</span> Receives tasks and submits requests.</>}
           </div>
           <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
@@ -171,7 +171,7 @@ function EditUserModal({ user: u, onClose, onSave }: {
                 <option value="executive">Executive</option>
                 <option value="deputy">Deputy</option>
                 <option value="dcs">Director</option>
-                <option value="finance">Secretary</option>
+                <option value="finance">Finance Manager</option>
                 <option value="officer">Officer</option>
                 <option value="super">System</option>
               </select>
@@ -409,7 +409,7 @@ export default function UsersPage() {
                r === 'executive' ? `Executive (${users.filter(u => u.role === r).length})` :
                r === 'deputy'    ? `Deputy (${users.filter(u => u.role === r).length})` :
                r === 'dcs'       ? `Director (${users.filter(u => u.role === r).length})` :
-               r === 'finance'   ? `Secretary (${users.filter(u => u.role === r).length})` :
+               r === 'finance'   ? `Finance Mgr (${users.filter(u => u.role === r).length})` :
                                    `Officer (${users.filter(u => u.role === r).length})`}
             </button>
           ))}
@@ -494,9 +494,9 @@ export default function UsersPage() {
             { color: 'text-red-700',     label: 'System',    desc: 'Full system access including user management, settings, and audit logs.' },
             { color: 'text-amber-700',   label: 'Manager',   desc: 'Submits requests, manages workplans, projects, KPIs, and reports.' },
             { color: 'text-purple-700',  label: 'Executive', desc: 'First-level approval of requests.' },
-            { color: 'text-indigo-700',  label: 'Deputy',    desc: 'Second-level endorsement of requests before Secretary approval.' },
-            { color: 'text-teal-700',    label: 'Director',  desc: 'Reviews requests endorsed by Deputy before Secretary allocation.' },
-            { color: 'text-emerald-700', label: 'Secretary', desc: 'Approves funding based on availability; receives acquittal reports.' },
+            { color: 'text-indigo-700',  label: 'Deputy',    desc: 'Second-level endorsement of requests before Finance Manager approval.' },
+            { color: 'text-teal-700',    label: 'Director',  desc: 'Reviews requests endorsed by Deputy before Finance Manager approval.' },
+            { color: 'text-emerald-700', label: 'Finance Manager', desc: 'Approves funding based on availability; receives acquittal reports.' },
             { color: 'text-gray-700',    label: 'Officer',   desc: 'Receives tasks and submits requests.' },
           ].map(r => (
             <div key={r.label}>

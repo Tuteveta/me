@@ -180,7 +180,7 @@ export function RequestMeta({ req }: { req: FundingRequest }) {
 /* ── Audit trail — chronological log of all approver decisions ─────────────── */
 export function AuditTrail({ req }: { req: FundingRequest }) {
   const STEP_LABELS: Record<string, string> = {
-    em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Secretary',
+    em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Finance Manager',
   }
   const DECISION_STYLE: Record<string, string> = {
     approved: 'bg-green-50 border-green-200 text-green-800',
@@ -711,7 +711,7 @@ export default function RequestsPage() {
                 <div className="flex items-center gap-1 flex-wrap">
                   {typeCfg.steps.map((step, i) => {
                     const labels: Record<string, string> = {
-                      em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Secretary',
+                      em: 'Executive', deputy: 'Deputy', dcs: 'Director', finance: 'Finance Manager',
                     }
                     return (
                       <div key={step} className="flex items-center gap-1">

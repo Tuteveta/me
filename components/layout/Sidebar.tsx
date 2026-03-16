@@ -50,7 +50,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
 const ROLE_DISPLAY: Record<UserRole, string> = {
   super:     'System',
   admin:     'Manager',
-  finance:   'Secretary',
+  finance:   'Finance Manager',
   executive: 'Executive',
   deputy:    'Deputy',
   dcs:       'Director',
