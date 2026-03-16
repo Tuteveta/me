@@ -13,6 +13,7 @@ const ROLE_CFG: Record<UserRole, { label: string; badge: string }> = {
   executive: { label: 'Executive Manager',             badge: 'bg-purple-100 text-purple-800 border-purple-300' },
   finance:   { label: 'Finance Manager',               badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
   admin:     { label: 'M&E / Program Manager',         badge: 'bg-blue-100 text-blue-800 border-blue-300' },
+  officer:   { label: 'Officer',                       badge: 'bg-gray-100 text-gray-700 border-gray-300' },
 }
 
 function RoleBadge({ role }: { role: UserRole }) {
