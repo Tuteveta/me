@@ -27,6 +27,15 @@ const schema = a.schema({
     'deferred',
   ]),
 
+  RequestType: a.enum([
+    'funding',
+    'procurement',
+    'leave_travel',
+    'training',
+    'it_support',
+    'policy',
+  ]),
+
   ProgramArea: a.enum([
     'Policy_and_ME',
     'Partnership_Sector',
@@ -177,6 +186,7 @@ const schema = a.schema({
       submittedBy:          a.string().required(),
       submittedAt:          a.string().required(),
       stage:                a.ref('RequestStage').required(),
+      requestType:          a.string(),   // RequestType — optional for backward compat
       budgetLine:           a.string(),
       deferredFromStage:    a.string(),
       // Approval decisions (serialised JSON: ApprovalEntry)

@@ -142,6 +142,61 @@ export interface AnnualWorkplan {
   strategicPriorityTitle?: string // e.g. "Digital Government Delivery"
 }
 
+// ── Request Types ──────────────────────────────────────────
+export type RequestType =
+  | 'funding'        // Full chain: EM → Deputy → DCS → Finance → Acquittal
+  | 'procurement'    // Full chain: EM → Deputy → DCS → Finance → Acquittal
+  | 'leave_travel'   // Direct: EM only, no funding
+  | 'training'       // Chain: EM → Deputy, no funding
+  | 'it_support'     // Direct: EM only, no funding
+  | 'policy'         // Chain: EM → DCS, no funding
+
+export interface RequestTypeCfg {
+  label: string
+  description: string
+  requiresFunding: boolean
+  steps: Array<'em' | 'deputy' | 'dcs' | 'finance'>
+}
+
+export const REQUEST_TYPE_CFG: Record<RequestType, RequestTypeCfg> = {
+  funding: {
+    label: 'Funding Request',
+    description: 'Programme or activity funding requiring full financial approval chain',
+    requiresFunding: true,
+    steps: ['em', 'deputy', 'dcs', 'finance'],
+  },
+  procurement: {
+    label: 'Procurement Request',
+    description: 'Goods or services procurement requiring full approval chain',
+    requiresFunding: true,
+    steps: ['em', 'deputy', 'dcs', 'finance'],
+  },
+  leave_travel: {
+    label: 'Leave / Travel Request',
+    description: 'Staff leave or official travel — approved directly by Executive Manager',
+    requiresFunding: false,
+    steps: ['em'],
+  },
+  training: {
+    label: 'Training Request',
+    description: 'Capacity building, courses, or workshops — reviewed by EM and Deputy Secretary',
+    requiresFunding: false,
+    steps: ['em', 'deputy'],
+  },
+  it_support: {
+    label: 'IT Support Request',
+    description: 'Technical support, equipment, or system access — direct EM approval',
+    requiresFunding: false,
+    steps: ['em'],
+  },
+  policy: {
+    label: 'Policy / Compliance Request',
+    description: 'Policy review, compliance, or regulatory matter — EM then Director Corp. Services',
+    requiresFunding: false,
+    steps: ['em', 'dcs'],
+  },
+}
+
 // ── Funding Requests (approval workflow) ──────────────────
 export type RequestStage =
   | 'pending_em'
@@ -182,6 +237,7 @@ export interface FundingRequest {
   fiscalYear: string
   submittedBy: string
   submittedAt: string
+  requestType: RequestType       // defaults to 'funding' for backward compatibility
   stage: RequestStage
   attachments: RequestAttachment[]
   em: ApprovalEntry

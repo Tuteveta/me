@@ -9,6 +9,7 @@ import {
   RefreshCw, PauseCircle, PlayCircle,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage } from '@/types'
+import { REQUEST_TYPE_CFG } from '@/types'
 import { AttachmentList } from '@/app/(dashboard)/requests/page'
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
@@ -16,21 +17,21 @@ const fmt = (n: number) =>
   n >= 1_000_000 ? `K${(n / 1_000_000).toFixed(2)}M` : `K${(n / 1_000).toFixed(0)}K`
 
 function TrackerBar({ req, highlightStage }: { req: FundingRequest; highlightStage: 'em' | 'deputy' | 'dcs' }) {
-  const steps = [
-    { key: 'em' as const,      label: 'Exec. Manager', entry: req.em },
-    { key: 'deputy' as const,  label: 'Deputy Sec.',   entry: req.deputy },
-    { key: 'dcs' as const,     label: 'Dir. Corp.',    entry: req.dcs },
-    { key: 'finance' as const, label: 'Finance',       entry: req.finance },
-  ]
+  const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
+  const STEP_LABELS: Record<string, string> = {
+    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp.', finance: 'Finance',
+  }
+  const stepKeys = cfg.steps
   return (
     <div className="flex items-center gap-0 mt-3">
-      {steps.map((s, i) => {
-        const done     = s.entry.decision === 'approved'
-        const rejected = s.entry.decision === 'rejected'
-        const deferred = s.entry.decision === 'deferred'
-        const isActive = s.key === highlightStage && s.entry.decision === 'pending'
+      {stepKeys.map((key, i) => {
+        const entry    = req[key as 'em' | 'deputy' | 'dcs' | 'finance']
+        const done     = entry.decision === 'approved'
+        const rejected = entry.decision === 'rejected'
+        const deferred = entry.decision === 'deferred'
+        const isActive = key === highlightStage && entry.decision === 'pending'
         return (
-          <div key={s.key} className="flex items-center flex-1">
+          <div key={key} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
                 done     ? 'bg-green-500 border-green-500 text-white' :
@@ -43,9 +44,9 @@ function TrackerBar({ req, highlightStage }: { req: FundingRequest; highlightSta
               </div>
               <p className={`text-[10px] mt-1 font-medium text-center ${
                 done ? 'text-green-600' : rejected ? 'text-red-500' : deferred ? 'text-yellow-700' : isActive ? 'text-blue-700 font-bold' : 'text-gray-400'
-              }`}>{s.label}</p>
+              }`}>{STEP_LABELS[key]}</p>
             </div>
-            {i < steps.length - 1 && (
+            {i < stepKeys.length - 1 && (
               <div className={`h-0.5 flex-1 mx-1 mb-4 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />
             )}
           </div>
@@ -280,7 +281,8 @@ export default function ApprovalsPage() {
     if (!user) return
     setError(null)
     try {
-      await decide(id, stage, decision, user.name, comment || undefined)
+      const req = requests.find(r => r.id === id)
+      await decide(id, stage, decision, user.name, comment || undefined, undefined, req?.requestType)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to save decision. Please try again.')
     }

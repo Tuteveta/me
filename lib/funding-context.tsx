@@ -4,7 +4,8 @@ import '@/lib/amplify'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '@/amplify/data/resource'
-import type { FundingRequest, RequestStage, ApprovalEntry, AcquittalReport, RequestAttachment } from '@/types'
+import type { FundingRequest, RequestStage, RequestType, ApprovalEntry, AcquittalReport, RequestAttachment } from '@/types'
+import { REQUEST_TYPE_CFG } from '@/types'
 
 export type { RequestAttachment }
 
@@ -14,8 +15,8 @@ interface FundingContextType {
   requests: FundingRequest[]
   isLoading: boolean
   reload: () => Promise<void>
-  submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) => Promise<void>
-  decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) => Promise<void>
+  submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType'>) => Promise<void>
+  decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string, requestType?: RequestType) => Promise<void>
   submitAcquittal: (id: string, report: AcquittalReport) => Promise<void>
   defer: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', by: string, reason: string, deferredFromStage: RequestStage) => Promise<void>
   resumeDeferred: (id: string) => Promise<void>
@@ -24,12 +25,20 @@ interface FundingContextType {
 
 const FundingContext = createContext<FundingContextType | null>(null)
 
-function nextStage(current: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected'): RequestStage {
+function nextStage(
+  current: 'em' | 'deputy' | 'dcs' | 'finance',
+  decision: 'approved' | 'rejected',
+  requestType: RequestType,
+): RequestStage {
   if (decision === 'rejected') return 'rejected'
-  if (current === 'em')      return 'pending_deputy'
-  if (current === 'deputy')  return 'pending_dcs'
-  if (current === 'dcs')     return 'pending_finance'
-  return 'pending_acquittal'
+  const { steps, requiresFunding } = REQUEST_TYPE_CFG[requestType]
+  const idx = steps.indexOf(current)
+  if (idx < steps.length - 1) {
+    // More steps remain
+    return `pending_${steps[idx + 1]}` as RequestStage
+  }
+  // Last approver in chain
+  return requiresFunding ? 'pending_acquittal' : 'closed'
 }
 
 const pending: ApprovalEntry = { decision: 'pending' }
@@ -51,6 +60,7 @@ function transform(item: Record<string, unknown>): FundingRequest {
     submittedBy: item.submittedBy as string,
     submittedAt: item.submittedAt as string,
     stage:       item.stage as RequestStage,
+    requestType: (item.requestType as RequestType) ?? 'funding',
     budgetLine:  item.budgetLine as string | undefined,
     attachments: parseArr<RequestAttachment>(item.attachments),
     em:          parse(item.emDecision),
@@ -84,7 +94,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load() }, [])
 
-  async function submit(data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments'>) {
+  async function submit(data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType'>) {
     const { errors } = await (client.models as any).FundingRequest.create({
       programme:       data.programme,
       description:     data.description,
@@ -92,6 +102,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
       fiscalYear:      data.fiscalYear,
       submittedBy:     data.submittedBy,
       submittedAt:     new Date().toISOString().slice(0, 10),
+      requestType:     data.requestType,
       stage:           'pending_em',
       emDecision:      JSON.stringify(pending),
       deputyDecision:  JSON.stringify(pending),
@@ -103,13 +114,13 @@ export function FundingProvider({ children }: { children: ReactNode }) {
     await load()
   }
 
-  async function decide(id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string) {
+  async function decide(id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string, requestType: RequestType = 'funding') {
     const entry: ApprovalEntry = { decision, by, at: new Date().toISOString().slice(0, 10), comment }
     const fieldMap = { em: 'emDecision', deputy: 'deputyDecision', dcs: 'dcsDecision', finance: 'financeDecision' }
     const { errors } = await (client.models as any).FundingRequest.update({
       id,
       [fieldMap[stage]]: JSON.stringify(entry),
-      stage: nextStage(stage, decision),
+      stage: nextStage(stage, decision, requestType),
       ...(stage === 'finance' && budgetLine ? { budgetLine } : {}),
     })
     if (errors?.length) throw new Error(errors[0].message)

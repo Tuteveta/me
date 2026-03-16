@@ -12,6 +12,7 @@ import {
   PauseCircle, RefreshCw,
 } from 'lucide-react'
 import type { FundingRequest } from '@/types'
+import { REQUEST_TYPE_CFG } from '@/types'
 import { useWorkplan } from '@/lib/workplan-context'
 import { AttachmentList } from '@/app/(dashboard)/requests/page'
 
@@ -23,22 +24,28 @@ const pct = (a: number, b: number) => (b === 0 ? 0 : Math.min(100, Math.round((a
 
 /* ── Approval trail ────────────────────────────────────────────────────────── */
 function ApprovalTrail({ req }: { req: FundingRequest }) {
+  const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
+  const TRAIL_LABELS: Record<string, string> = {
+    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc',
+  }
+  // Show only the pre-finance steps that are part of this request type's chain
+  const preFinanceSteps = cfg.steps.filter((s): s is 'em' | 'deputy' | 'dcs' => s !== 'finance')
+  if (preFinanceSteps.length === 0) return null
   return (
     <div className="flex gap-4 mt-3">
-      {[
-        { label: 'Exec. Manager',  entry: req.em },
-        { label: 'Deputy Sec.',    entry: req.deputy },
-        { label: 'Dir. Corp. Svc', entry: req.dcs },
-      ].map(s => (
-        <div key={s.label} className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-          <div>
-            <p className="text-[10px] font-semibold text-gray-600">{s.label}</p>
-            <p className="text-[10px] text-gray-400">{s.entry.by} · {s.entry.at}</p>
-            {s.entry.comment && <p className="text-[10px] text-gray-400 italic">&ldquo;{s.entry.comment}&rdquo;</p>}
+      {preFinanceSteps.map(key => {
+        const entry = req[key]
+        return (
+          <div key={key} className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+            <div>
+              <p className="text-[10px] font-semibold text-gray-600">{TRAIL_LABELS[key]}</p>
+              <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
+              {entry.comment && <p className="text-[10px] text-gray-400 italic">&ldquo;{entry.comment}&rdquo;</p>}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -122,25 +129,34 @@ function RequestCard({ req, kraOptions, onDecide, onDefer }: {
 
           <AttachmentList attachments={req.attachments ?? []} />
 
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Approval Chain</p>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {[
-                { label: 'Exec. Manager',  entry: req.em },
-                { label: 'Deputy Sec.',    entry: req.deputy },
-                { label: 'Dir. Corp. Svc', entry: req.dcs },
-              ].map(s => (
-                <div key={s.label} className="flex items-start gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-600">{s.label}</p>
-                    <p className="text-[10px] text-gray-400">{s.entry.by} · {s.entry.at}</p>
-                    {s.entry.comment && <p className="text-[10px] text-gray-400 italic">"{s.entry.comment}"</p>}
-                  </div>
+          {(() => {
+            const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
+            const CHAIN_LABELS: Record<string, string> = {
+              em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc',
+            }
+            const preFinanceSteps = cfg.steps.filter((s): s is 'em' | 'deputy' | 'dcs' => s !== 'finance')
+            if (preFinanceSteps.length === 0) return null
+            return (
+              <div>
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Approval Chain</p>
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {preFinanceSteps.map(key => {
+                    const entry = req[key]
+                    return (
+                      <div key={key} className="flex items-start gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-semibold text-gray-600">{CHAIN_LABELS[key]}</p>
+                          <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
+                          {entry.comment && <p className="text-[10px] text-gray-400 italic">"{entry.comment}"</p>}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )
+          })()}
 
           {isDeferred && (
             <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-3">
@@ -369,34 +385,33 @@ function AcquittalReviewCard({ req, onClose }: {
           <AttachmentList attachments={req.attachments ?? []} />
 
           {/* Approval chain summary */}
-          <div>
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Approval Chain</p>
-            <div className="flex flex-wrap gap-3">
-              {[
-                { label: 'Exec. Manager',  entry: req.em },
-                { label: 'Deputy Sec.',    entry: req.deputy },
-                { label: 'Dir. Corp. Svc', entry: req.dcs },
-              ].map(s => (
-                <div key={s.label} className="flex items-start gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-600">{s.label}</p>
-                    <p className="text-[10px] text-gray-400">{s.entry.by} · {s.entry.at}</p>
-                    {s.entry.comment && <p className="text-[10px] text-gray-400 italic">"{s.entry.comment}"</p>}
-                  </div>
-                </div>
-              ))}
-              <div className="flex items-start gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-600">Finance</p>
-                  <p className="text-[10px] text-gray-400">{req.finance.by} · {req.finance.at}</p>
-                  {req.finance.comment && <p className="text-[10px] text-gray-400 italic">"{req.finance.comment}"</p>}
-                  {req.budgetLine && <p className="text-[10px] text-blue-600 font-semibold">{req.budgetLine}</p>}
+          {(() => {
+            const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
+            const CHAIN_LABELS: Record<string, string> = {
+              em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc', finance: 'Finance',
+            }
+            return (
+              <div>
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Approval Chain</p>
+                <div className="flex flex-wrap gap-3">
+                  {cfg.steps.map(key => {
+                    const entry = req[key as 'em' | 'deputy' | 'dcs' | 'finance']
+                    return (
+                      <div key={key} className="flex items-start gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-semibold text-gray-600">{CHAIN_LABELS[key]}</p>
+                          <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
+                          {entry.comment && <p className="text-[10px] text-gray-400 italic">"{entry.comment}"</p>}
+                          {key === 'finance' && req.budgetLine && <p className="text-[10px] text-blue-600 font-semibold">{req.budgetLine}</p>}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
-            </div>
-          </div>
+            )
+          })()}
 
           {/* Acquittal report */}
           {req.acquittal && (
@@ -488,7 +503,8 @@ export default function FinancePage() {
 
   async function handleDecide(id: string, decision: 'approved' | 'rejected', comment: string, budgetLine: string) {
     if (!user) return
-    await decide(id, 'finance', decision, user.name, comment || undefined, budgetLine || undefined)
+    const req = requests.find(r => r.id === id)
+    await decide(id, 'finance', decision, user.name, comment || undefined, budgetLine || undefined, req?.requestType)
   }
 
   async function handleDefer(id: string, reason: string) {
