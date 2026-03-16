@@ -10,7 +10,7 @@ import {
   PlusCircle, Clock, XCircle, ChevronDown, ChevronUp,
   ArrowRight, FileText, Paperclip, Upload, X,
   FileImage, FileSpreadsheet, File, BookOpenCheck, Lock, ClipboardList,
-  Tag, ChevronRight,
+  Tag, ChevronRight, Inbox, CheckCircle2, PauseCircle, PlayCircle,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage, RequestAttachment, RequestType } from '@/types'
 import { REQUEST_TYPE_CFG } from '@/types'
@@ -372,15 +372,193 @@ function AcquittalForm({ req, onSubmit }: {
   )
 }
 
+/* ── Role → approval stage mapping ────────────────────────────────────────── */
+const ROLE_STAGE: Record<string, 'em' | 'deputy' | 'dcs' | 'finance'> = {
+  executive: 'em', deputy: 'deputy', dcs: 'dcs', finance: 'finance',
+}
+const STAGE_FILTER: Record<string, RequestStage> = {
+  executive: 'pending_em', deputy: 'pending_deputy', dcs: 'pending_dcs', finance: 'pending_finance',
+}
+
+/* ── Incoming request card ─────────────────────────────────────────────────── */
+function IncomingRequestCard({ req, approverStage, onDecide, onDefer, onResume }: {
+  req: FundingRequest
+  approverStage: 'em' | 'deputy' | 'dcs' | 'finance'
+  onDecide: (id: string, decision: 'approved' | 'rejected', comment: string) => Promise<void>
+  onDefer: (id: string, reason: string) => Promise<void>
+  onResume: (id: string) => Promise<void>
+}) {
+  const [open, setOpen]       = useState(false)
+  const [comment, setComment] = useState('')
+  const [deciding, setDeciding] = useState(false)
+  const [showDefer, setShowDefer] = useState(false)
+  const [deferReason, setDeferReason] = useState('')
+  const [deferring, setDeferring] = useState(false)
+  const [resuming, setResuming] = useState(false)
+
+  const isDeferred  = req.stage === 'deferred'
+  const canAct      = req[approverStage].decision === 'pending' || isDeferred
+  const isAcqReview = req.stage === 'pending_acquittal_review' && approverStage === 'finance'
+
+  async function handle(decision: 'approved' | 'rejected') {
+    setDeciding(true)
+    await onDecide(req.id, decision, comment)
+    setDeciding(false)
+  }
+
+  async function handleDefer() {
+    if (!deferReason.trim()) return
+    setDeferring(true)
+    await onDefer(req.id, deferReason)
+    setDeferring(false)
+  }
+
+  async function handleResume() {
+    setResuming(true)
+    await onResume(req.id)
+    setResuming(false)
+  }
+
+  const meta = STAGE_META[req.stage]
+  const StageIcon = STAGE_ICON[req.stage]
+
+  return (
+    <div className={`bg-white border rounded-lg overflow-hidden ${isDeferred ? 'border-yellow-300' : 'border-blue-200'}`}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full text-left px-4 py-4 flex items-start gap-3 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{req.programme}</p>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${meta.bg} ${meta.color} ${meta.border}`}>
+              <StageIcon className="w-3 h-3" />{meta.label}
+            </span>
+            <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+              {REQUEST_TYPE_CFG[req.requestType ?? 'funding'].label}
+            </span>
+            <span className="text-xs text-gray-400">{req.submittedBy}{req.division ? ` · ${req.division}` : ''}</span>
+            <span className="text-xs text-gray-400">{req.submittedAt}</span>
+          </div>
+        </div>
+        {req.amount > 0 && <p className="text-sm font-black text-gray-900 shrink-0">{fmt(req.amount)}</p>}
+        {open ? <ChevronUp className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-5 border-t border-gray-100 space-y-3">
+          <div className="flex items-start gap-2 bg-gray-50 rounded p-3 mt-3">
+            <FileText className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
+          </div>
+
+          <RequestMeta req={req} />
+          <AttachmentList attachments={req.attachments ?? []} />
+          <TrackerBar req={req} />
+          <AuditTrail req={req} />
+
+          {/* Acquittal report — show for finance review */}
+          {isAcqReview && req.acquittal && (
+            <div className="border border-teal-200 rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-teal-50 border-b border-teal-200">
+                <BookOpenCheck className="w-3.5 h-3.5 text-teal-600" />
+                <p className="text-xs font-bold text-teal-800 uppercase tracking-wide">Acquittal Report · {req.acquittal.submittedAt}</p>
+              </div>
+              <div className="px-4 py-3 space-y-1">
+                <p className="text-xs text-gray-700 leading-relaxed">{req.acquittal.notes}</p>
+                <AttachmentList attachments={req.acquittal.attachments} />
+              </div>
+            </div>
+          )}
+
+          {/* Deferred — resume button */}
+          {isDeferred && (
+            <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <PauseCircle className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-yellow-800">On Hold / Deferred</p>
+                {req[approverStage].comment && <p className="text-xs text-yellow-700 mt-0.5 italic">{req[approverStage].comment}</p>}
+              </div>
+              <button onClick={handleResume} disabled={resuming}
+                className="shrink-0 flex items-center gap-1.5 bg-white border border-yellow-300 text-yellow-700 text-xs font-semibold px-3 py-1.5 rounded hover:bg-yellow-100 disabled:opacity-60 transition-colors">
+                <PlayCircle className="w-3.5 h-3.5" />{resuming ? 'Resuming…' : 'Resume'}
+              </button>
+            </div>
+          )}
+
+          {/* Action panel */}
+          {canAct && !isDeferred && (
+            <div className="space-y-3 pt-2 border-t border-gray-100">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Comment <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <textarea rows={2} placeholder="Add a note for the next approver…" value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handle('approved')} disabled={deciding || deferring}
+                  className="flex items-center gap-1.5 bg-green-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-green-700 disabled:opacity-60 transition-colors">
+                  <CheckCircle2 className="w-3.5 h-3.5" />{isAcqReview ? 'Close Request' : 'Approve'}
+                </button>
+                {!isAcqReview && (
+                  <>
+                    <button onClick={() => handle('rejected')} disabled={deciding || deferring}
+                      className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60 transition-colors">
+                      <XCircle className="w-3.5 h-3.5" />Reject
+                    </button>
+                    <button onClick={() => setShowDefer(v => !v)} disabled={deciding || deferring}
+                      className="flex items-center gap-1.5 bg-yellow-500 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-60 transition-colors">
+                      <PauseCircle className="w-3.5 h-3.5" />Defer / Hold
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {showDefer && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-yellow-800">Defer this request</p>
+                  <textarea rows={2} placeholder="Reason for deferring…" value={deferReason}
+                    onChange={e => setDeferReason(e.target.value)}
+                    className="w-full border border-yellow-300 rounded px-3 py-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none bg-white" />
+                  <button onClick={handleDefer} disabled={deferring}
+                    className="flex items-center gap-1.5 bg-yellow-600 text-white text-xs font-semibold px-4 py-2 rounded hover:bg-yellow-700 disabled:opacity-60 transition-colors">
+                    <PauseCircle className="w-3.5 h-3.5" />{deferring ? 'Deferring…' : 'Confirm Defer'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function RequestsPage() {
   const { user } = useAuth()
   if (!user) redirect('/dashboard')
 
-  const { requests, submit, submitAcquittal } = useFunding()
+  const { requests, submit, submitAcquittal, decide, defer, resumeDeferred, closeRequest, isLoading } = useFunding()
   const { workplans } = useWorkplan()
   const myRequests = requests.filter(r => r.submittedBy === user?.name)
 
+  // Incoming: requests at the stage that matches this user's role
+  const myApproverStage = user ? ROLE_STAGE[user.role] : undefined
+  const myStageFilter   = user ? STAGE_FILTER[user.role] : undefined
+  const incomingRequests = myStageFilter
+    ? requests.filter(r =>
+        r.submittedBy !== user?.name && (
+          r.stage === myStageFilter ||
+          r.stage === 'deferred' ||
+          (myApproverStage === 'finance' && r.stage === 'pending_acquittal_review')
+        )
+      )
+    : []
+
+  const [activeTab, setActiveTab]   = useState<'mine' | 'incoming'>('mine')
   const [showForm, setShowForm]     = useState(false)
   const [expanded, setExpanded]     = useState<string | null>(null)
   const [requestType, setRequestType] = useState<RequestType>('funding')
@@ -463,6 +641,29 @@ export default function RequestsPage() {
     })
   }
 
+  async function handleIncomingDecide(id: string, decision: 'approved' | 'rejected', comment: string) {
+    if (!myApproverStage) return
+    if (decision === 'approved' && myApproverStage === 'finance') {
+      const req = requests.find(r => r.id === id)
+      if (req?.stage === 'pending_acquittal_review') {
+        await closeRequest(id, user?.name ?? '')
+        return
+      }
+    }
+    await decide(id, myApproverStage, decision, user?.name ?? '', comment)
+  }
+
+  async function handleIncomingDefer(id: string, reason: string) {
+    if (!myApproverStage) return
+    const req = requests.find(r => r.id === id)
+    if (!req) return
+    await defer(id, myApproverStage, user?.name ?? '', reason, req.stage)
+  }
+
+  async function handleIncomingResume(id: string) {
+    await resumeDeferred(id)
+  }
+
   const inProgress  = myRequests.filter(r => !['closed', 'rejected'].includes(r.stage))
   const closedCount = myRequests.filter(r => r.stage === 'closed').length
   const pendingAcq  = myRequests.filter(r => r.stage === 'pending_acquittal').length
@@ -492,6 +693,9 @@ export default function RequestsPage() {
           { label: 'Acquittal Due', count: pendingAcq,                     cls: 'bg-orange-50 text-orange-700 border-orange-200' },
           { label: 'Closed',        count: closedCount,                    cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
           { label: 'Rejected',      count: myRequests.filter(r => r.stage === 'rejected').length, cls: 'bg-red-50 text-red-700 border-red-200' },
+          ...(incomingRequests.length > 0
+            ? [{ label: 'Awaiting My Action', count: incomingRequests.length, cls: 'bg-blue-50 text-blue-700 border-blue-200' }]
+            : []),
         ].map(p => (
           <span key={p.label} className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border ${p.cls}`}>
             {p.count} {p.label}
@@ -752,8 +956,55 @@ export default function RequestsPage() {
         </div>
       )}
 
-      {/* ── Requests list ───────────────────────────────────────────────────── */}
-      {myRequests.length === 0 ? (
+      {/* ── Tabs ────────────────────────────────────────────────────────────── */}
+      {incomingRequests.length > 0 && (
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+          {(['mine', 'incoming'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-md transition-colors ${
+                activeTab === tab
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab === 'mine' ? (
+                <><FileText className="w-3.5 h-3.5" />My Requests ({myRequests.length})</>
+              ) : (
+                <><Inbox className="w-3.5 h-3.5" />Incoming ({incomingRequests.length}){incomingRequests.length > 0 && <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{incomingRequests.length}</span>}</>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Incoming requests list ───────────────────────────────────────────── */}
+      {activeTab === 'incoming' && myApproverStage && (
+        incomingRequests.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <Inbox className="w-10 h-10 mx-auto mb-3 opacity-40" />
+            <p className="text-sm font-medium">No incoming requests</p>
+            <p className="text-xs mt-1">Requests awaiting your action will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {incomingRequests.map(req => (
+              <IncomingRequestCard
+                key={req.id}
+                req={req}
+                approverStage={myApproverStage}
+                onDecide={handleIncomingDecide}
+                onDefer={handleIncomingDefer}
+                onResume={handleIncomingResume}
+              />
+            ))}
+          </div>
+        )
+      )}
+
+      {/* ── My Requests list ───────────────────────────────────────────────── */}
+      {activeTab === 'mine' && (myRequests.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
           <p className="text-sm font-medium">No requests yet</p>
@@ -838,7 +1089,7 @@ export default function RequestsPage() {
             )
           })}
         </div>
-      )}
+      ))}
     </div>
   )
 }
