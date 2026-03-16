@@ -855,7 +855,7 @@ function DeputyDashboard({ requests }: { requests: FundingRequest[] }) {
             </div>
             <div className="space-y-2">
               {FUNCTIONAL_AREAS.map(fa => (
-                <div key={fa.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${fa.bgColor} border ${fa.borderColor}`}>
+                <div key={fa.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${fa.color} border ${fa.borderColor}`}>
                   <Building2 className={`w-3.5 h-3.5 ${fa.textColor} shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-[11px] font-bold ${fa.textColor} truncate`}>{fa.shortTitle}</p>
