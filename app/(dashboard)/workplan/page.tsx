@@ -5,9 +5,11 @@ import { useWorkplan } from '@/lib/workplan-context'
 import { useAuth } from '@/lib/auth-context'
 import type { AnnualWorkplan, KRA, WorkplanKPI, WorkplanStatus } from '@/types'
 import { DICT_DIVISIONS } from '@/lib/org-data'
+import { PRIORITIES } from '@/lib/corporate-plan-data'
 import {
   Plus, ChevronDown, ChevronRight, Trash2, Save,
   CheckCircle, Clock, FileEdit, Send, X, ClipboardList,
+  BookMarked, CheckCircle2,
 } from 'lucide-react'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -39,13 +41,49 @@ function NewWorkplanModal({
   onCreate: (wp: AnnualWorkplan) => void
   createdBy: string
 }) {
-  const [title, setTitle]       = useState('')
-  const [year, setYear]         = useState('FY 2025/26')
-  const [period, setPeriod]     = useState('Jul 2025 – Jun 2026')
-  const [division, setDivision] = useState(DICT_DIVISIONS[0])
-  const [budget, setBudget]     = useState('')
+  const [title, setTitle]         = useState('')
+  const [year, setYear]           = useState('FY 2025/26')
+  const [period, setPeriod]       = useState('Jul 2025 – Jun 2026')
+  const [division, setDivision]   = useState(DICT_DIVISIONS[0])
+  const [budget, setBudget]       = useState('')
   const [objective, setObjective] = useState('')
-  const [error, setError]       = useState('')
+  const [spId, setSpId]           = useState('')   // selected strategic priority id
+  const [error, setError]         = useState('')
+
+  const selectedSP = PRIORITIES.find(p => p.id === spId) ?? null
+
+  // When a strategic priority is selected, auto-fill the objective field
+  function handleSelectSP(id: string) {
+    setSpId(id)
+    const sp = PRIORITIES.find(p => p.id === id)
+    if (sp && !objective.trim()) {
+      setObjective(sp.description)
+    }
+  }
+
+  // Build KRAs from the selected strategic priority's objectives
+  function buildKRAsFromSP(): KRA[] {
+    if (!selectedSP) return [emptyKRA()]
+    return selectedSP.objectives.map(obj => ({
+      id: uid(),
+      title: obj.title,
+      description: obj.description,
+      weight: Math.round(100 / selectedSP.objectives.length),
+      kpis: obj.kpis.map(k => ({
+        id: uid(),
+        name: k.name,
+        unit: '',
+        baseline: k.baseline,
+        q1Target: '',
+        q2Target: '',
+        q3Target: '',
+        q4Target: '',
+        annualTarget: k.target,
+        responsible: '',
+        method: '',
+      })),
+    }))
+  }
 
   function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
@@ -61,7 +99,9 @@ function NewWorkplanModal({
       createdBy,
       status: 'draft',
       createdAt: new Date().toISOString().split('T')[0],
-      kras: [emptyKRA()],
+      kras: buildKRAsFromSP(),
+      strategicPriorityId: selectedSP?.id,
+      strategicPriorityTitle: selectedSP?.title,
     }
     onCreate(wp)
     onClose()
@@ -71,13 +111,13 @@ function NewWorkplanModal({
   const labelCls = 'block text-[11px] font-semibold text-gray-600 mb-1'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-sm border border-gray-200 w-full max-w-lg shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+      <div className="bg-white rounded-sm border border-gray-200 w-full max-w-xl shadow-lg max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
           <div>
             <h2 className="text-sm font-bold text-gray-900">New Annual Workplan</h2>
-            <p className="text-[11px] text-gray-400 mt-0.5">Create a new M&E workplan for the fiscal year</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Create a new M&amp;E workplan aligned to the Corporate Plan</p>
           </div>
           <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
             <X className="w-4 h-4" />
@@ -85,11 +125,61 @@ function NewWorkplanModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded">{error}</div>
           )}
 
+          {/* ── Corporate Plan Alignment ── */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <BookMarked className="w-4 h-4 text-blue-700 shrink-0" />
+              <p className="text-xs font-bold text-blue-800">Corporate Plan Alignment</p>
+            </div>
+            <div>
+              <label className={labelCls}>
+                Strategic Priority <span className="text-red-500">*</span>
+                <span className="ml-1 text-[10px] font-normal text-gray-400">— KRAs and KPIs will be pre-filled from the selected priority</span>
+              </label>
+              <select
+                className={`${inputCls} border-blue-300 focus:ring-blue-600`}
+                value={spId}
+                onChange={e => handleSelectSP(e.target.value)}
+                required
+              >
+                <option value="">— Select a Strategic Priority —</option>
+                {PRIORITIES.map(sp => (
+                  <option key={sp.id} value={sp.id}>{sp.priority} · {sp.title}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Preview of what will be pre-populated */}
+            {selectedSP && (
+              <div className="bg-white border border-blue-100 rounded p-3 space-y-2">
+                <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide">
+                  Will pre-populate {selectedSP.objectives.length} KRA{selectedSP.objectives.length !== 1 ? 's' : ''}
+                </p>
+                {selectedSP.objectives.map((obj, i) => (
+                  <div key={obj.id} className="flex items-start gap-2">
+                    <div className="w-4 h-4 rounded flex items-center justify-center text-[9px] font-black text-white shrink-0 mt-0.5"
+                      style={{ background: selectedSP.color }}>
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold text-gray-800">{obj.title}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {obj.kpis.length} KPI{obj.kpis.length !== 1 ? 's' : ''}: {obj.kpis.map(k => k.name).join(' · ')}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Workplan Details ── */}
           <div>
             <label className={labelCls}>Workplan Title <span className="text-red-500">*</span></label>
             <input className={inputCls} placeholder="e.g. Annual M&E Workplan 2025/26" value={title}
@@ -126,18 +216,19 @@ function NewWorkplanModal({
               placeholder="Describe the overall objective of this workplan"
               value={objective} onChange={e => setObjective(e.target.value)} />
           </div>
-
-          <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
-            <button type="button" onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
-              Cancel
-            </button>
-            <button type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors">
-              <Plus className="w-3.5 h-3.5" /> Create Workplan
-            </button>
-          </div>
         </form>
+
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 shrink-0">
+          <button type="button" onClick={onClose}
+            className="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit as any}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Create Workplan
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -459,6 +550,11 @@ export default function WorkplanPage() {
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-0.5">{wp.division} · {wp.kras.length} KRA{wp.kras.length !== 1 ? 's' : ''}</p>
+                {wp.strategicPriorityTitle && (
+                  <p className="text-[9px] text-blue-600 font-semibold mt-0.5 truncate">
+                    {wp.strategicPriorityTitle}
+                  </p>
+                )}
               </button>
             )
           })}
@@ -509,6 +605,15 @@ export default function WorkplanPage() {
                     {totalWeight !== 100 && <span className="text-[10px]">(ideally 100%)</span>}
                   </div>
                 </div>
+                {/* Corporate Plan alignment badge */}
+                {active.strategicPriorityTitle && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <BookMarked className="w-3 h-3 text-blue-500 shrink-0" />
+                    <span className="text-[10px] text-blue-700 font-semibold">
+                      Aligned to Corporate Plan: {active.strategicPriorityTitle}
+                    </span>
+                  </div>
+                )}
                 {active.objective && (
                   <p className="text-[11px] text-gray-500 leading-snug mt-2 italic">{active.objective}</p>
                 )}

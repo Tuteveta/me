@@ -137,6 +137,9 @@ export interface AnnualWorkplan {
   status: WorkplanStatus
   createdAt: string
   kras: KRA[]
+  // Corporate Plan alignment
+  strategicPriorityId?: string    // e.g. "sp1"
+  strategicPriorityTitle?: string // e.g. "Digital Government Delivery"
 }
 
 // ── Funding Requests (approval workflow) ──────────────────
