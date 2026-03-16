@@ -84,7 +84,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
             <div>
               <label className={labelCls}>Role</label>
               <select className={inputCls} value={role} onChange={e => setRole(e.target.value as UserRole)}>
-                <option value="admin">M&E Manager</option>
+                <option value="admin">Manager</option>
                 <option value="executive">Executive Manager</option>
                 <option value="deputy">Deputy Secretary</option>
                 <option value="dcs">Dir. Corporate Services</option>
@@ -103,7 +103,7 @@ function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (u: Mana
           {/* Role hint */}
           <div className="bg-gray-50 border border-gray-100 rounded px-3 py-2 text-[11px] text-gray-500">
             {role === 'super'     && <><span className="font-bold text-red-700">Super Admin:</span> Full system access including user management and audit logs.</>}
-            {role === 'admin'     && <><span className="font-bold text-amber-700">M&E Manager:</span> Project management, KPI oversight, workplans, and funding requests.</>}
+            {role === 'admin'     && <><span className="font-bold text-amber-700">Manager:</span> Submits requests, manages workplans, projects, KPIs, and reports.</>}
             {role === 'executive' && <><span className="font-bold text-purple-700">Executive Manager:</span> First-level approval of M&E funding requests.</>}
             {role === 'deputy'    && <><span className="font-bold text-indigo-700">Deputy Secretary:</span> Second-level endorsement before Finance approval.</>}
             {role === 'finance'   && <><span className="font-bold text-emerald-700">Finance Manager:</span> Reviews and approves programme funding; receives acquittal reports.</>}
@@ -261,7 +261,7 @@ export default function UsersPage() {
               }`}
             >
               {r === 'all' ? `All (${users.length})` :
-               r === 'admin' ? `M&E Mgr (${users.filter(u => u.role === r).length})` :
+               r === 'admin' ? `Manager (${users.filter(u => u.role === r).length})` :
                r === 'executive' ? `Exec. Mgr (${users.filter(u => u.role === r).length})` :
                r === 'deputy' ? `Deputy Sec. (${users.filter(u => u.role === r).length})` :
                r === 'dcs' ? `Dir. Corp. (${users.filter(u => u.role === r).length})` :
@@ -347,12 +347,12 @@ export default function UsersPage() {
             <p className="text-[11px] text-gray-500 mt-0.5">Full system access including user management, settings, and audit logs.</p>
           </div>
           <div>
-            <span className="font-bold text-amber-700">M&E Manager</span>
-            <p className="text-[11px] text-gray-500 mt-0.5">Submits funding requests, manages workplans, projects, KPIs, and reports.</p>
+            <span className="font-bold text-amber-700">Manager</span>
+            <p className="text-[11px] text-gray-500 mt-0.5">Submits requests, manages workplans, projects, KPIs, and reports.</p>
           </div>
           <div>
             <span className="font-bold text-purple-700">Executive Manager</span>
-            <p className="text-[11px] text-gray-500 mt-0.5">First-level approval of funding requests from the M&E Manager.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">First-level approval of requests.</p>
           </div>
           <div>
             <span className="font-bold text-indigo-700">Deputy Secretary</span>

@@ -55,7 +55,7 @@ const STAGE_ICON: Record<RequestStage, React.ElementType> = {
 
 const ROLE_LABELS: Record<string, string> = {
   super:     'Super Admin',
-  admin:     'M&E Manager',
+  admin:     'Manager',
   finance:   'Finance Manager',
   executive: 'Executive Manager',
   deputy:    'Deputy Secretary',
