@@ -184,7 +184,7 @@ const PRIORITIES: StrategicPriority[] = [
     priority: 'SP 5',
     title: 'Institutional Capacity & Human Capital',
     shortTitle: 'Capacity',
-    description: 'Build DICT's organisational capacity and develop ICT skills across the public service to sustain digital transformation.',
+    description: "Build DICT's organisational capacity and develop ICT skills across the public service to sustain digital transformation.",
     icon: Users2,
     color: '#D97706',
     bgColor: 'bg-amber-50',
