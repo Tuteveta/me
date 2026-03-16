@@ -15,7 +15,7 @@ interface FundingContextType {
   requests: FundingRequest[]
   isLoading: boolean
   reload: () => Promise<void>
-  submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType'>) => Promise<void>
+  submit: (data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType' | 'division' | 'workplanId' | 'workplanTitle' | 'kraId' | 'kraTitle'>) => Promise<void>
   decide: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', decision: 'approved' | 'rejected', by: string, comment?: string, budgetLine?: string, requestType?: RequestType) => Promise<void>
   submitAcquittal: (id: string, report: AcquittalReport) => Promise<void>
   defer: (id: string, stage: 'em' | 'deputy' | 'dcs' | 'finance', by: string, reason: string, deferredFromStage: RequestStage) => Promise<void>
@@ -52,21 +52,26 @@ function transform(item: Record<string, unknown>): FundingRequest {
     try { return JSON.parse(s as string) } catch { return [] }
   }
   return {
-    id:          item.id as string,
-    programme:   item.programme as string,
-    description: item.description as string,
-    amount:      item.amount as number,
-    fiscalYear:  item.fiscalYear as string,
-    submittedBy: item.submittedBy as string,
-    submittedAt: item.submittedAt as string,
-    stage:       item.stage as RequestStage,
-    requestType: (item.requestType as RequestType) ?? 'funding',
-    budgetLine:  item.budgetLine as string | undefined,
-    attachments: parseArr<RequestAttachment>(item.attachments),
-    em:          parse(item.emDecision),
-    deputy:      parse(item.deputyDecision),
-    dcs:         parse(item.dcsDecision),
-    finance:     parse(item.financeDecision),
+    id:             item.id as string,
+    programme:      item.programme as string,
+    description:    item.description as string,
+    amount:         item.amount as number,
+    fiscalYear:     item.fiscalYear as string,
+    submittedBy:    item.submittedBy as string,
+    submittedAt:    item.submittedAt as string,
+    stage:          item.stage as RequestStage,
+    requestType:    (item.requestType as RequestType) ?? 'funding',
+    budgetLine:     item.budgetLine as string | undefined,
+    division:       item.division as string | undefined,
+    workplanId:     item.workplanId as string | undefined,
+    workplanTitle:  item.workplanTitle as string | undefined,
+    kraId:          item.kraId as string | undefined,
+    kraTitle:       item.kraTitle as string | undefined,
+    attachments:    parseArr<RequestAttachment>(item.attachments),
+    em:             parse(item.emDecision),
+    deputy:         parse(item.deputyDecision),
+    dcs:            parse(item.dcsDecision),
+    finance:        parse(item.financeDecision),
     acquittal: item.acquittalSubmittedAt ? {
       submittedAt:  item.acquittalSubmittedAt as string,
       notes:        (item.acquittalNotes as string) ?? '',
@@ -94,7 +99,7 @@ export function FundingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load() }, [])
 
-  async function submit(data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType'>) {
+  async function submit(data: Pick<FundingRequest, 'programme' | 'description' | 'amount' | 'fiscalYear' | 'submittedBy' | 'attachments' | 'requestType' | 'division' | 'workplanId' | 'workplanTitle' | 'kraId' | 'kraTitle'>) {
     const { errors } = await (client.models as any).FundingRequest.create({
       programme:       data.programme,
       description:     data.description,
@@ -103,6 +108,11 @@ export function FundingProvider({ children }: { children: ReactNode }) {
       submittedBy:     data.submittedBy,
       submittedAt:     new Date().toISOString().slice(0, 10),
       requestType:     data.requestType,
+      division:        data.division,
+      workplanId:      data.workplanId,
+      workplanTitle:   data.workplanTitle,
+      kraId:           data.kraId,
+      kraTitle:        data.kraTitle,
       stage:           'pending_em',
       emDecision:      JSON.stringify(pending),
       deputyDecision:  JSON.stringify(pending),

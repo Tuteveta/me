@@ -5,12 +5,12 @@ import { useAuth } from '@/lib/auth-context'
 import { useFunding } from '@/lib/funding-context'
 import { redirect } from 'next/navigation'
 import {
-  CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, FileText, AlertTriangle,
+  CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, FileText,
   RefreshCw, PauseCircle, PlayCircle,
 } from 'lucide-react'
 import type { FundingRequest, RequestStage } from '@/types'
 import { REQUEST_TYPE_CFG } from '@/types'
-import { AttachmentList } from '@/app/(dashboard)/requests/page'
+import { AttachmentList, RequestMeta, AuditTrail } from '@/app/(dashboard)/requests/page'
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
@@ -97,13 +97,18 @@ function RequestCard({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{req.programme}</p>
           <div className="flex flex-wrap gap-2 mt-1">
-            <span className="text-xs text-gray-400">{req.submittedBy} · {req.submittedAt}</span>
+            <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+              {REQUEST_TYPE_CFG[req.requestType ?? 'funding'].label}
+            </span>
+            <span className="text-xs text-gray-400">{req.submittedBy}{req.division ? ` · ${req.division}` : ''} · {req.submittedAt}</span>
             <span className="text-xs text-gray-400">{req.fiscalYear}</span>
           </div>
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm font-black text-gray-900">{fmt(req.amount)}</p>
-        </div>
+        {req.amount > 0 && (
+          <div className="text-right shrink-0">
+            <p className="text-sm font-black text-gray-900">{fmt(req.amount)}</p>
+          </div>
+        )}
         {open
           ? <ChevronUp className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
           : <ChevronDown className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
@@ -118,38 +123,13 @@ function RequestCard({
             <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
           </div>
 
+          <RequestMeta req={req} />
+
           <TrackerBar req={req} highlightStage={stage} />
 
           <AttachmentList attachments={req.attachments ?? []} />
 
-          {/* Prior comments */}
-          {stage === 'deputy' && req.em.comment && (
-            <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded p-3">
-              <AlertTriangle className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[10px] font-semibold text-blue-700">Exec. Manager Note — {req.em.by}</p>
-                <p className="text-xs text-blue-600 mt-0.5">{req.em.comment}</p>
-              </div>
-            </div>
-          )}
-          {stage === 'dcs' && req.deputy.comment && (
-            <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded p-3">
-              <AlertTriangle className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[10px] font-semibold text-blue-700">Deputy Secretary Note — {req.deputy.by}</p>
-                <p className="text-xs text-blue-600 mt-0.5">{req.deputy.comment}</p>
-              </div>
-            </div>
-          )}
-          {stage === 'dcs' && req.em.comment && (
-            <div className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded p-3">
-              <AlertTriangle className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[10px] font-semibold text-gray-600">Exec. Manager Note — {req.em.by}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{req.em.comment}</p>
-              </div>
-            </div>
-          )}
+          <AuditTrail req={req} />
 
           {!alreadyDecided && (
             <>

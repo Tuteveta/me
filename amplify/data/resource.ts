@@ -186,7 +186,12 @@ const schema = a.schema({
       submittedBy:          a.string().required(),
       submittedAt:          a.string().required(),
       stage:                a.ref('RequestStage').required(),
-      requestType:          a.string(),   // RequestType — optional for backward compat
+      requestType:          a.string(),
+      division:             a.string(),
+      workplanId:           a.string(),
+      workplanTitle:        a.string(),
+      kraId:                a.string(),
+      kraTitle:             a.string(),
       budgetLine:           a.string(),
       deferredFromStage:    a.string(),
       // Approval decisions (serialised JSON: ApprovalEntry)

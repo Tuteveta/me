@@ -231,22 +231,28 @@ export interface AcquittalReport {
 
 export interface FundingRequest {
   id: string
-  programme: string
+  requestType: RequestType       // defaults to 'funding' for backward compatibility
+  programme: string              // KRA title (funding/procurement) or free-text subject (other types)
   description: string
   amount: number
   fiscalYear: string
   submittedBy: string
   submittedAt: string
-  requestType: RequestType       // defaults to 'funding' for backward compatibility
+  division?: string              // submitter's division
+  // Source linkage — populated for funding/procurement types
+  workplanId?: string
+  workplanTitle?: string
+  kraId?: string
+  kraTitle?: string
   stage: RequestStage
   attachments: RequestAttachment[]
   em: ApprovalEntry
   deputy: ApprovalEntry
-  dcs: ApprovalEntry           // Director Corporate Services
+  dcs: ApprovalEntry
   finance: ApprovalEntry
-  budgetLine?: string          // work plan KRA the Finance charged this to
+  budgetLine?: string            // budget line assigned by Finance on approval
   acquittal?: AcquittalReport
-  deferredFromStage?: string    // NEW: the stage it was at when deferred
+  deferredFromStage?: string
 }
 
 // ── Users (Super-managed) ─────────────────────────────────

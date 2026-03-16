@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   PlusCircle, Clock, XCircle, ChevronDown, ChevronUp,
-  ArrowRight, AlertTriangle, FileText, Paperclip, Upload, X,
+  ArrowRight, FileText, Paperclip, Upload, X,
   FileImage, FileSpreadsheet, File, BookOpenCheck, Lock, ClipboardList,
   Tag, ChevronRight,
 } from 'lucide-react'
@@ -144,6 +144,89 @@ function TrackerBar({ req }: { req: FundingRequest }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+/* ── Request source metadata card ─────────────────────────────────────────── */
+export function RequestMeta({ req }: { req: FundingRequest }) {
+  const rows: Array<[string, string | undefined]> = [
+    ['Type',       REQUEST_TYPE_CFG[req.requestType ?? 'funding'].label],
+    ['Division',   req.division],
+    ['Workplan',   req.workplanTitle],
+    ['KRA',        req.kraTitle],
+    ['Fiscal Year', req.fiscalYear],
+    ['Submitted',  req.submittedAt],
+    ['By',         req.submittedBy],
+    ...(req.budgetLine ? [['Budget Line', req.budgetLine] as [string, string]] : []),
+  ]
+  const visible = rows.filter(([, v]) => v)
+  if (!visible.length) return null
+  return (
+    <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Request Details</p>
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
+        {visible.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{label}</dt>
+            <dd className="text-xs text-gray-800 font-medium mt-0.5 break-words">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+/* ── Audit trail — chronological log of all approver decisions ─────────────── */
+export function AuditTrail({ req }: { req: FundingRequest }) {
+  const STEP_LABELS: Record<string, string> = {
+    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Services', finance: 'Finance',
+  }
+  const DECISION_STYLE: Record<string, string> = {
+    approved: 'bg-green-50 border-green-200 text-green-800',
+    rejected: 'bg-red-50 border-red-200 text-red-800',
+    deferred: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    pending:  'bg-gray-50 border-gray-200 text-gray-500',
+  }
+  const entries: Array<{ step: string; label: string; entry: { decision: string; by?: string; at?: string; comment?: string } }> = [
+    { step: 'em',      label: STEP_LABELS.em,      entry: req.em      },
+    { step: 'deputy',  label: STEP_LABELS.deputy,  entry: req.deputy  },
+    { step: 'dcs',     label: STEP_LABELS.dcs,     entry: req.dcs     },
+    { step: 'finance', label: STEP_LABELS.finance, entry: req.finance },
+  ]
+  const active = entries.filter(e => e.entry.decision !== 'pending')
+  if (!active.length) return null
+
+  return (
+    <div className="mt-4 border-t border-gray-100 pt-4">
+      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Approval Audit Trail</p>
+      <div className="space-y-2">
+        {active.map(({ step, label, entry }) => (
+          <div key={step} className={`rounded-lg border px-3 py-2.5 ${DECISION_STYLE[entry.decision] ?? DECISION_STYLE.pending}`}>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-[11px] font-bold">{label}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">{entry.decision}</span>
+            </div>
+            {(entry.by || entry.at) && (
+              <p className="text-[10px] mt-0.5 opacity-70">{[entry.by, entry.at].filter(Boolean).join(' · ')}</p>
+            )}
+            {entry.comment && (
+              <p className="text-xs mt-1 leading-relaxed opacity-90">{entry.comment}</p>
+            )}
+          </div>
+        ))}
+        {/* Acquittal entry if submitted */}
+        {req.acquittal && (
+          <div className="rounded-lg border px-3 py-2.5 bg-emerald-50 border-emerald-200 text-emerald-800">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold">Acquittal</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">Submitted</span>
+            </div>
+            <p className="text-[10px] mt-0.5 opacity-70">{req.acquittal.submittedAt}</p>
+            {req.acquittal.notes && <p className="text-xs mt-1 leading-relaxed opacity-90">{req.acquittal.notes}</p>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -339,11 +422,16 @@ export default function RequestsPage() {
       const uploadPrefix = `funding-requests/${crypto.randomUUID()}`
       const attachments = await uploadFiles(files, uploadPrefix)
       await submit({
-        programme:   typeCfg.requiresFunding ? (selectedKra?.title ?? '') : programme,
+        programme:     typeCfg.requiresFunding ? (selectedKra?.title ?? '') : programme,
         description,
-        amount:      typeCfg.requiresFunding ? parseFloat(amount) : 0,
-        fiscalYear:  typeCfg.requiresFunding ? (selectedWp?.fiscalYear ?? fiscalYear) : fiscalYear,
-        submittedBy: user.name,
+        amount:        typeCfg.requiresFunding ? parseFloat(amount) : 0,
+        fiscalYear:    typeCfg.requiresFunding ? (selectedWp?.fiscalYear ?? fiscalYear) : fiscalYear,
+        submittedBy:   user.name,
+        division:      user.division,
+        workplanId:    typeCfg.requiresFunding ? selectedWp?.id : undefined,
+        workplanTitle: typeCfg.requiresFunding ? selectedWp?.title : undefined,
+        kraId:         typeCfg.requiresFunding ? selectedKra?.id : undefined,
+        kraTitle:      typeCfg.requiresFunding ? selectedKra?.title : undefined,
         attachments,
         requestType,
       })
@@ -713,32 +801,21 @@ export default function RequestsPage() {
 
                 {isOpen && (
                   <div className="px-4 pb-5 border-t border-gray-100">
-                    {/* Justification */}
+                    {/* Description */}
                     <div className="flex items-start gap-2 bg-gray-50 rounded p-3 mt-3">
                       <FileText className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
                       <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
                     </div>
 
+                    {/* Source metadata */}
+                    <RequestMeta req={req} />
+
                     <AttachmentList attachments={req.attachments ?? []} />
 
                     <TrackerBar req={req} />
 
-                    {/* Finance response */}
-                    {req.finance.comment && (
-                      <div className={`mt-3 flex items-start gap-2 rounded p-3 border ${
-                        req.stage === 'rejected' && req.finance.decision === 'rejected'
-                          ? 'bg-red-50 border-red-200'
-                          : 'bg-green-50 border-green-200'
-                      }`}>
-                        <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${
-                          req.finance.decision === 'rejected' ? 'text-red-600' : 'text-green-600'
-                        }`} />
-                        <div>
-                          <p className="text-xs font-semibold text-gray-700">Finance Response</p>
-                          <p className="text-xs text-gray-600 mt-0.5">{req.finance.comment}</p>
-                        </div>
-                      </div>
-                    )}
+                    {/* Full audit trail */}
+                    <AuditTrail req={req} />
 
                     {/* Acquittal form — shown when finance approved */}
                     {req.stage === 'pending_acquittal' && (
@@ -748,19 +825,11 @@ export default function RequestsPage() {
                       />
                     )}
 
-                    {/* Closed — show submitted acquittal */}
-                    {req.stage === 'closed' && req.acquittal && (
-                      <div className="mt-3 border-t border-gray-100 pt-4">
-                        <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded p-3">
-                          <Lock className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-emerald-800">
-                              Request Closed · Acquittal submitted {req.acquittal.submittedAt}
-                            </p>
-                            <p className="text-xs text-emerald-700 mt-1 leading-relaxed">{req.acquittal.notes}</p>
-                            <AttachmentList attachments={req.acquittal.attachments} />
-                          </div>
-                        </div>
+                    {/* Closed — show submitted acquittal attachments */}
+                    {req.stage === 'closed' && req.acquittal?.attachments?.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Acquittal Attachments</p>
+                        <AttachmentList attachments={req.acquittal.attachments} />
                       </div>
                     )}
                   </div>

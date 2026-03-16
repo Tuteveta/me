@@ -14,41 +14,13 @@ import {
 import type { FundingRequest } from '@/types'
 import { REQUEST_TYPE_CFG } from '@/types'
 import { useWorkplan } from '@/lib/workplan-context'
-import { AttachmentList } from '@/app/(dashboard)/requests/page'
+import { AttachmentList, RequestMeta, AuditTrail } from '@/app/(dashboard)/requests/page'
 
 /* ── Helpers ───────────────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
   n >= 1_000_000 ? `K${(n / 1_000_000).toFixed(2)}M` : `K${(n / 1_000).toFixed(0)}K`
 
 const pct = (a: number, b: number) => (b === 0 ? 0 : Math.min(100, Math.round((a / b) * 100)))
-
-/* ── Approval trail ────────────────────────────────────────────────────────── */
-function ApprovalTrail({ req }: { req: FundingRequest }) {
-  const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
-  const TRAIL_LABELS: Record<string, string> = {
-    em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc',
-  }
-  // Show only the pre-finance steps that are part of this request type's chain
-  const preFinanceSteps = cfg.steps.filter((s): s is 'em' | 'deputy' | 'dcs' => s !== 'finance')
-  if (preFinanceSteps.length === 0) return null
-  return (
-    <div className="flex gap-4 mt-3">
-      {preFinanceSteps.map(key => {
-        const entry = req[key]
-        return (
-          <div key={key} className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-            <div>
-              <p className="text-[10px] font-semibold text-gray-600">{TRAIL_LABELS[key]}</p>
-              <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
-              {entry.comment && <p className="text-[10px] text-gray-400 italic">&ldquo;{entry.comment}&rdquo;</p>}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 /* ── Pending request card ──────────────────────────────────────────────────── */
 function RequestCard({ req, kraOptions, onDecide, onDefer }: {
@@ -95,7 +67,10 @@ function RequestCard({ req, kraOptions, onDecide, onDefer }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{req.programme}</p>
           <div className="flex flex-wrap gap-2 mt-1">
-            <span className="text-xs text-gray-400">{req.submittedBy} · {req.submittedAt} · {req.fiscalYear}</span>
+            <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+              {REQUEST_TYPE_CFG[req.requestType ?? 'funding'].label}
+            </span>
+            <span className="text-xs text-gray-400">{req.submittedBy}{req.division ? ` · ${req.division}` : ''} · {req.submittedAt} · {req.fiscalYear}</span>
             {!decided && !isDeferred && (
               <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded uppercase">
                 Awaiting Decision
@@ -127,36 +102,11 @@ function RequestCard({ req, kraOptions, onDecide, onDefer }: {
             <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
           </div>
 
+          <RequestMeta req={req} />
+
           <AttachmentList attachments={req.attachments ?? []} />
 
-          {(() => {
-            const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
-            const CHAIN_LABELS: Record<string, string> = {
-              em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc',
-            }
-            const preFinanceSteps = cfg.steps.filter((s): s is 'em' | 'deputy' | 'dcs' => s !== 'finance')
-            if (preFinanceSteps.length === 0) return null
-            return (
-              <div>
-                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Approval Chain</p>
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {preFinanceSteps.map(key => {
-                    const entry = req[key]
-                    return (
-                      <div key={key} className="flex items-start gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-semibold text-gray-600">{CHAIN_LABELS[key]}</p>
-                          <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
-                          {entry.comment && <p className="text-[10px] text-gray-400 italic">"{entry.comment}"</p>}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })()}
+          <AuditTrail req={req} />
 
           {isDeferred && (
             <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-3">
@@ -303,16 +253,9 @@ function ClosedCard({ req }: { req: FundingRequest }) {
             <FileText className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
             <p className="text-xs text-gray-600 leading-relaxed">{req.description}</p>
           </div>
+          <RequestMeta req={req} />
           <AttachmentList attachments={req.attachments ?? []} />
-          <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded p-3">
-            <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-gray-700">
-                Approved by {req.finance.by} on {req.finance.at}
-              </p>
-              {req.finance.comment && <p className="text-xs text-gray-600 mt-0.5">{req.finance.comment}</p>}
-            </div>
-          </div>
+          <AuditTrail req={req} />
           {req.acquittal && (
             <div className="border border-emerald-200 rounded-lg overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border-b border-emerald-200">
@@ -382,36 +325,11 @@ function AcquittalReviewCard({ req, onClose }: {
             </div>
           </div>
 
+          <RequestMeta req={req} />
+
           <AttachmentList attachments={req.attachments ?? []} />
 
-          {/* Approval chain summary */}
-          {(() => {
-            const cfg = REQUEST_TYPE_CFG[req.requestType ?? 'funding']
-            const CHAIN_LABELS: Record<string, string> = {
-              em: 'Exec. Manager', deputy: 'Deputy Sec.', dcs: 'Dir. Corp. Svc', finance: 'Finance',
-            }
-            return (
-              <div>
-                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Approval Chain</p>
-                <div className="flex flex-wrap gap-3">
-                  {cfg.steps.map(key => {
-                    const entry = req[key as 'em' | 'deputy' | 'dcs' | 'finance']
-                    return (
-                      <div key={key} className="flex items-start gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-semibold text-gray-600">{CHAIN_LABELS[key]}</p>
-                          <p className="text-[10px] text-gray-400">{entry.by} · {entry.at}</p>
-                          {entry.comment && <p className="text-[10px] text-gray-400 italic">"{entry.comment}"</p>}
-                          {key === 'finance' && req.budgetLine && <p className="text-[10px] text-blue-600 font-semibold">{req.budgetLine}</p>}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })()}
+          <AuditTrail req={req} />
 
           {/* Acquittal report */}
           {req.acquittal && (
