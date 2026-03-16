@@ -1,8 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { FUNCTIONAL_AREAS } from '@/lib/org-data'
+import { FUNCTIONAL_AREAS, DICT_PEOPLE } from '@/lib/org-data'
+import type { UserRole } from '@/types'
 import { Building2, ChevronDown, ChevronRight, Users, Briefcase, Activity } from 'lucide-react'
+
+/* ── Role display config ────────────────────────────────────────────────────── */
+const ROLE_CFG: Record<UserRole, { label: string; badge: string }> = {
+  super:     { label: 'Secretary / Super Admin',       badge: 'bg-amber-100 text-amber-800 border-amber-300' },
+  deputy:    { label: 'Deputy Secretary',              badge: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
+  dcs:       { label: 'Dir. Corporate Services',       badge: 'bg-teal-100 text-teal-800 border-teal-300' },
+  executive: { label: 'Executive Manager',             badge: 'bg-purple-100 text-purple-800 border-purple-300' },
+  finance:   { label: 'Finance Manager',               badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  admin:     { label: 'M&E / Program Manager',         badge: 'bg-blue-100 text-blue-800 border-blue-300' },
+}
+
+function RoleBadge({ role }: { role: UserRole }) {
+  const cfg = ROLE_CFG[role]
+  return (
+    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border ${cfg.badge} whitespace-nowrap`}>
+      {cfg.label}
+    </span>
+  )
+}
 
 export default function OrganisationPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
@@ -31,6 +51,9 @@ export default function OrganisationPage() {
             <p className={`text-xs font-bold ${fa.textColor} truncate`}>{fa.shortTitle}</p>
             <p className="text-[11px] text-gray-500 mt-0.5">{fa.headRole}</p>
             <p className="text-xs font-semibold text-gray-700 mt-0.5 truncate">{fa.head}</p>
+            <div className="mt-1">
+              <RoleBadge role={fa.headSystemRole} />
+            </div>
             <p className="text-[10px] text-gray-400 mt-1">{fa.programs.length} program{fa.programs.length !== 1 ? 's' : ''}</p>
           </div>
         ))}
@@ -55,6 +78,7 @@ export default function OrganisationPage() {
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${fa.color} ${fa.textColor} ${fa.borderColor} border`}>
                     {fa.headRole}
                   </span>
+                  <RoleBadge role={fa.headSystemRole} />
                 </div>
                 <p className="text-xs text-gray-600 mt-0.5">
                   <span className="font-semibold">{fa.head}</span>
@@ -83,9 +107,10 @@ export default function OrganisationPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-gray-800">{prog.title}</p>
                         {prog.executiveManager && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="text-[10px] text-gray-400">Executive Manager:</span>
                             <span className="text-[10px] font-semibold text-gray-600">{prog.executiveManager}</span>
+                            {prog.executiveManagerRole && <RoleBadge role={prog.executiveManagerRole} />}
                           </div>
                         )}
                       </div>
@@ -102,9 +127,10 @@ export default function OrganisationPage() {
                               {act.manager && (
                                 <>
                                   <span className="text-gray-300 text-[10px]">·</span>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
                                     <Users className="w-3 h-3 text-gray-400" />
                                     <span className="text-[11px] text-gray-500">{act.manager}</span>
+                                    {act.managerRole && <RoleBadge role={act.managerRole} />}
                                   </div>
                                 </>
                               )}
@@ -133,47 +159,62 @@ export default function OrganisationPage() {
           <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-500" />
             People Directory
+            <span className="text-[10px] font-semibold text-gray-400 ml-1">· {DICT_PEOPLE.length} staff</span>
           </h2>
         </div>
+
+        {/* Role legend */}
+        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/40 flex flex-wrap gap-2">
+          {(Object.entries(ROLE_CFG) as [UserRole, typeof ROLE_CFG[UserRole]][]).map(([role, cfg]) => (
+            <span key={role} className={`inline-flex items-center text-[9px] font-bold px-2 py-0.5 rounded border ${cfg.badge}`}>
+              {cfg.label}
+            </span>
+          ))}
+        </div>
+
         <div className="divide-y divide-gray-100">
-          {[
-            { name: 'Steven Maitainaho', role: 'Secretary', area: 'Executive Services', badge: 'bg-amber-50 text-amber-700' },
-            { name: 'Flierl Shongol',    role: 'Deputy Secretary', area: 'Policy and Emerging Technology', badge: 'bg-blue-50 text-blue-700' },
-            { name: 'Jessy Sekere',      role: 'Deputy Secretary', area: 'Digital Government Delivery', badge: 'bg-purple-50 text-purple-700' },
-            { name: 'Maisen Windu',      role: 'Director', area: 'Corporate Services', badge: 'bg-emerald-50 text-emerald-700' },
-            { name: 'David Kapi',        role: 'Executive Manager', area: 'Policy and M&E', badge: 'bg-indigo-50 text-indigo-700' },
-            { name: 'Hera John',         role: 'Executive Manager', area: 'Partnership and Sector Funding', badge: 'bg-indigo-50 text-indigo-700' },
-            { name: 'Lizarhmarie Warike',role: 'Executive Manager / Cloud Manager', area: 'Government Cloud and Information Delivery', badge: 'bg-indigo-50 text-indigo-700' },
-            { name: 'Joshua Pomalo',     role: 'Executive Manager', area: 'DevOps', badge: 'bg-indigo-50 text-indigo-700' },
-            { name: 'Hamilton Vagi',     role: 'Executive Manager', area: 'Cyber Security', badge: 'bg-indigo-50 text-indigo-700' },
-            { name: 'Thomson',           role: 'Policy Manager', area: 'Policy and M&E', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Nathan Randa',      role: 'M&E Manager', area: 'Policy and M&E', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Narson',            role: 'Partnership Manager', area: 'Partnership and Sector Funding', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Henry Konaka',      role: 'Sector Funding Manager', area: 'Partnership and Sector Funding', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Jesse Biribudo',    role: 'DevOps Manager', area: 'DevOps', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Bernard Sike',      role: 'Standards Manager', area: 'Government Cloud and Information Delivery', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Nancy Kanasa',      role: 'Data Governance Manager', area: 'Government Cloud and Information Delivery', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Billy Seri',        role: 'HR Manager', area: 'Corporate Services', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'William Kimia',     role: 'Finance & Administration Manager', area: 'Corporate Services', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Bartch Morris',     role: 'IT Manager', area: 'Corporate Services', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Marian Rema',       role: 'GESI Manager', area: 'Executive Services', badge: 'bg-gray-100 text-gray-600' },
-            { name: 'Valu Rova',         role: 'Internal Auditor', area: 'Executive Services', badge: 'bg-gray-100 text-gray-600' },
-          ].map(person => (
-            <div key={person.name} className="flex items-center gap-3 px-5 py-2.5">
+          {DICT_PEOPLE.map(person => (
+            <div key={person.name} className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors">
               <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs font-bold shrink-0">
                 {person.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-gray-900">{person.name}</p>
-                <p className="text-[11px] text-gray-400">{person.area}</p>
+                <p className="text-[11px] text-gray-400">{person.position} · {person.area}</p>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${person.badge}`}>
-                {person.role}
-              </span>
+              <RoleBadge role={person.role} />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Role mapping legend */}
+      <div className="bg-white border border-gray-200 rounded-lg p-5">
+        <h2 className="text-sm font-bold text-gray-900 mb-3">System Role Mapping</h2>
+        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+          Each staff member&apos;s position maps to a system role that determines their dashboard view,
+          access permissions, and approval authority within the M&amp;E platform.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {(Object.entries(ROLE_CFG) as [UserRole, typeof ROLE_CFG[UserRole]][]).map(([role, cfg]) => {
+            const people = DICT_PEOPLE.filter(p => p.role === role)
+            return (
+              <div key={role} className={`rounded-lg border p-3 ${cfg.badge}`}>
+                <p className="text-[10px] font-bold uppercase tracking-wide mb-1">{cfg.label}</p>
+                <p className="text-[11px] font-semibold text-gray-700 mb-2">
+                  {people.length} {people.length === 1 ? 'person' : 'people'}
+                </p>
+                <ul className="space-y-0.5">
+                  {people.map(p => (
+                    <li key={p.name} className="text-[10px] text-gray-600 truncate">{p.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
     </div>
   )
 }
