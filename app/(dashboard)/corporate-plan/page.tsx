@@ -194,7 +194,7 @@ const PRIORITIES: StrategicPriority[] = [
       {
         id: 'sp5o1',
         title: 'Strengthen DICT organisational capability',
-        description: 'Recruit, train, and retain qualified ICT professionals to deliver DICT's mandate.',
+        description: "Recruit, train, and retain qualified ICT professionals to deliver DICT's mandate.",
         initiatives: [
           'Fill all vacant ICT positions',
           'Implement HR succession planning',
