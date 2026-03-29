@@ -303,3 +303,40 @@ export interface Task {
   progress: number          // 0–100
   notes?: string            // officer's latest update note
 }
+
+// ── Quarterly Reports ─────────────────────────────────────
+export type QRStatus = 'draft' | 'submitted' | 'reviewed'
+export type QuarterLabel = 'Q1' | 'Q2' | 'Q3' | 'Q4'
+export type QREntryStatus = 'Completed' | 'Ongoing' | 'Not Started' | 'Deferred'
+
+export interface QREntry {
+  id: string
+  quarter: QuarterLabel
+  kra: string
+  plannedActivity: string
+  kpi: string
+  approvedBudget: string
+  expenditure: string
+  status: QREntryStatus
+  justification: string
+  officersInCharge: string
+}
+
+export interface QuarterlyReport {
+  id: string
+  title: string
+  fiscalYear: string
+  wing: string
+  division: string
+  branch: string
+  createdBy: string
+  createdAt: string
+  submittedAt?: string
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewComment?: string
+  status: QRStatus
+  workplanId?: string
+  workplanTitle?: string
+  entries: QREntry[]
+}
