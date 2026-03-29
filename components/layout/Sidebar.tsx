@@ -9,6 +9,7 @@ import {
   LayoutDashboard, FolderKanban, Target, FileText,
   Settings, Users, ChevronLeft, ChevronRight, LogOut, ClipboardList, X, Banknote,
   SendHorizonal, BadgeCheck, UserCircle, Network, BookMarked, PieChart, UserCheck, ClipboardCheck, Wallet,
+  LayoutList, HelpCircle,
 } from 'lucide-react'
 
 interface NavItem {
@@ -28,7 +29,9 @@ const NAV_ITEMS: NavItem[] = [
   { icon: FileText,        label: 'Reports',            href: '/reports',       roles: ['super', 'admin'] },
   { icon: ClipboardList,   label: 'Annual Workplan',    href: '/workplan',      roles: ['super', 'admin', 'finance'] },
   { icon: ClipboardCheck,  label: 'Quarterly Reports',  href: '/quarterly-report', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
-  { icon: Wallet, label: 'Budget Plan', href: '/budget-plan', roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: Wallet,          label: 'Budget Plan',         href: '/budget-plan',       roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: LayoutList,      label: 'M&E Summary',         href: '/me-summary',        roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs'] },
+  { icon: HelpCircle,      label: 'Help / Guide',        href: '/help',              roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs', 'officer'] },
   { icon: Settings,        label: 'Settings',           href: '/settings',      roles: ['super', 'admin'] },
   { icon: Users,           label: 'User Management',    href: '/users',         roles: ['super'] },
   { icon: SendHorizonal,   label: 'My Requests',        href: '/requests',      roles: ['super', 'admin', 'finance', 'executive', 'deputy', 'dcs', 'officer'] },

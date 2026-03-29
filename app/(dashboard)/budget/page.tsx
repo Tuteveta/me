@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import {
   Banknote, TrendingUp, TrendingDown, ChevronDown, ChevronRight,
-  AlertTriangle, CheckCircle2, BarChart3, Calendar,
+  AlertTriangle, CheckCircle2, BarChart3, Calendar, FileEdit, X, Save,
 } from 'lucide-react'
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -36,11 +37,12 @@ interface BudgetArea {
   programs: BudgetProgram[]
 }
 
-/* ── Data ──────────────────────────────────────────────────────────────────── */
+/* ── Default Data ──────────────────────────────────────────────────────────── */
 const FISCAL_YEAR = 'FY 2024/25'
 const QUARTER_LABELS = ['Q1 (Jul–Sep)', 'Q2 (Oct–Dec)', 'Q3 (Jan–Mar)', 'Q4 (Apr–Jun)']
+const STORAGE_KEY = 'dict_me_budget_areas'
 
-const BUDGET_AREAS: BudgetArea[] = [
+const DEFAULT_BUDGET_AREAS: BudgetArea[] = [
   {
     id: 'policy',
     title: 'Policy and Emerging Technology',
@@ -181,57 +183,144 @@ function barColor(p: number) {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export default function BudgetPage() {
+  const { user } = useAuth()
+  const canEdit = user?.role === 'finance' || user?.role === 'super'
+
+  const [areas, setAreas] = useState<BudgetArea[]>(DEFAULT_BUDGET_AREAS)
+  const [draft, setDraft] = useState<BudgetArea[]>(DEFAULT_BUDGET_AREAS)
+  const [editing, setEditing] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
-    Object.fromEntries(BUDGET_AREAS.map(a => [a.id, true]))
+    Object.fromEntries(DEFAULT_BUDGET_AREAS.map(a => [a.id, true]))
   )
   const [activeQuarter, setActiveQuarter] = useState<'all' | 'q1' | 'q2' | 'q3' | 'q4'>('all')
+
+  // Hydrate from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const saved: BudgetArea[] = JSON.parse(raw)
+        setAreas(saved)
+        setDraft(saved)
+        setExpanded(Object.fromEntries(saved.map(a => [a.id, true])))
+      }
+    } catch {}
+  }, [])
 
   function toggle(id: string) {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
+  function startEdit() {
+    setDraft(JSON.parse(JSON.stringify(areas)))  // deep copy
+    setEditing(true)
+  }
+
+  function cancelEdit() {
+    setDraft(JSON.parse(JSON.stringify(areas)))
+    setEditing(false)
+  }
+
+  function saveEdit() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(draft)) } catch {}
+    setAreas(draft)
+    setEditing(false)
+  }
+
+  // Update a single number field on a budget line
+  function setLineField(areaId: string, progId: string, lineId: string, field: keyof BudgetLine, raw: string) {
+    const val = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0
+    setDraft(prev => prev.map(a => a.id !== areaId ? a : {
+      ...a,
+      programs: a.programs.map(p => p.id !== progId ? p : {
+        ...p,
+        lines: p.lines.map(l => l.id !== lineId ? l : { ...l, [field]: val }),
+      }),
+    }))
+  }
+
+  // Update totalAllocated for an area
+  function setAreaAllocated(areaId: string, raw: string) {
+    const val = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0
+    setDraft(prev => prev.map(a => a.id !== areaId ? a : { ...a, totalAllocated: val }))
+  }
+
+  const activeAreas = editing ? draft : areas
+
   // Totals
-  const totalAllocated = BUDGET_AREAS.reduce((s, a) => s + a.totalAllocated, 0)
-  const totalSpent = BUDGET_AREAS.reduce((s, a) =>
+  const totalAllocated = activeAreas.reduce((s, a) => s + a.totalAllocated, 0)
+  const totalSpent = activeAreas.reduce((s, a) =>
     s + a.programs.reduce((ss, p) =>
       ss + p.lines.reduce((sss, l) => sss + spent(l), 0), 0), 0)
   const totalRemaining = totalAllocated - totalSpent
   const totalPct = pctBar(totalSpent, totalAllocated)
 
-  // Q totals
   const qTotals = (['q1', 'q2', 'q3', 'q4'] as const).map(q =>
-    BUDGET_AREAS.reduce((s, a) =>
+    activeAreas.reduce((s, a) =>
       s + a.programs.reduce((ss, p) =>
         ss + p.lines.reduce((sss, l) => sss + l[q], 0), 0), 0)
   )
+
+  const inputCls = "w-full text-right bg-white border border-blue-300 rounded px-1.5 py-0.5 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-black text-gray-900">Expenditure Budget</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {FISCAL_YEAR} — Budget allocation and expenditure by functional area
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded p-0.5 shrink-0">
-          {([['all','All'], ['q1','Q1'], ['q2','Q2'], ['q3','Q3'], ['q4','Q4']] as const).map(([q, label]) => (
-            <button
-              key={q}
-              onClick={() => setActiveQuarter(q)}
-              className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
-                activeQuarter === q
-                  ? 'bg-blue-700 text-white'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {label}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Quarter filter */}
+          <div className="flex items-center gap-1 bg-white border border-gray-200 rounded p-0.5">
+            {([['all','All'], ['q1','Q1'], ['q2','Q2'], ['q3','Q3'], ['q4','Q4']] as const).map(([q, label]) => (
+              <button
+                key={q}
+                onClick={() => setActiveQuarter(q)}
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+                  activeQuarter === q
+                    ? 'bg-blue-700 text-white'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Edit controls — Finance only */}
+          {canEdit && !editing && (
+            <button onClick={startEdit}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded hover:bg-gray-50 transition-colors">
+              <FileEdit className="w-3.5 h-3.5" /> Edit Data
             </button>
-          ))}
+          )}
+          {editing && (
+            <>
+              <button onClick={cancelEdit}
+                className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded hover:bg-gray-50 transition-colors">
+                <X className="w-3.5 h-3.5" /> Cancel
+              </button>
+              <button onClick={saveEdit}
+                className="flex items-center gap-1.5 bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded hover:bg-blue-800 transition-colors">
+                <Save className="w-3.5 h-3.5" /> Save Changes
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Edit notice */}
+      {editing && (
+        <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded px-3 py-2 text-xs text-blue-800">
+          <FileEdit className="w-3.5 h-3.5 shrink-0" />
+          <span>Edit mode — click any <strong>Allocated</strong> or quarterly expenditure cell to update the value. Click <strong>Save Changes</strong> when done.</span>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -307,7 +396,7 @@ export default function BudgetPage() {
 
       {/* Area-by-area breakdown */}
       <div className="space-y-4">
-        {BUDGET_AREAS.map(area => {
+        {activeAreas.map(area => {
           const areaSpent = area.programs.reduce((s, p) =>
             s + p.lines.reduce((ss, l) => ss + spent(l), 0), 0)
           const areaPct = pctBar(areaSpent, area.totalAllocated)
@@ -343,7 +432,16 @@ export default function BudgetPage() {
                     <span className="text-xs font-black shrink-0" style={{ color: barColor(areaPct) }}>{areaPct}%</span>
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-[11px] text-gray-400">
-                    <span>Allocated: <span className="font-semibold text-gray-700">{fmt(area.totalAllocated)}</span></span>
+                    <span>Allocated: {editing
+                      ? <input
+                          type="number"
+                          defaultValue={area.totalAllocated}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => setAreaAllocated(area.id, e.target.value)}
+                          className="w-28 bg-white border border-blue-300 rounded px-1.5 py-0.5 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      : <span className="font-semibold text-gray-700">{fmt(area.totalAllocated)}</span>
+                    }</span>
                     <span>Expended: <span className="font-semibold text-amber-700">{fmt(areaSpent)}</span></span>
                     <span>Remaining: <span className="font-semibold text-emerald-700">{fmt(areaRemaining)}</span></span>
                   </div>
@@ -381,11 +479,14 @@ export default function BudgetPage() {
                             <thead>
                               <tr className="border-b border-gray-100">
                                 <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Activity / Budget Line</th>
-                                <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Allocated</th>
-                                <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Q1</th>
-                                <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Q2</th>
-                                <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Q3</th>
-                                <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Q4</th>
+                                <th className={`px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wide ${editing ? 'text-blue-600' : 'text-gray-400'}`}>
+                                  Allocated {editing && <span className="normal-case font-normal">(editable)</span>}
+                                </th>
+                                {(['q1', 'q2', 'q3', 'q4'] as const).map((q, i) => (
+                                  <th key={q} className={`px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wide ${editing ? 'text-blue-600' : 'text-gray-400'}`}>
+                                    Q{i+1} {editing && <span className="normal-case font-normal">(K)</span>}
+                                  </th>
+                                ))}
                                 <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total Spent</th>
                                 <th className="px-3 py-2 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Remaining</th>
                                 <th className="px-3 py-2 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">%</th>
@@ -400,16 +501,35 @@ export default function BudgetPage() {
                                 return (
                                   <tr key={line.id} className="border-b border-gray-50 hover:bg-gray-50/40 align-middle">
                                     <td className="px-5 py-2.5 font-medium text-gray-800">{line.activity}</td>
-                                    <td className="px-3 py-2.5 text-right text-gray-700 font-semibold">{fmt(line.allocated)}</td>
+
+                                    {/* Allocated — editable */}
+                                    <td className="px-3 py-2 text-right">
+                                      {editing
+                                        ? <input type="number" defaultValue={line.allocated}
+                                            onChange={e => setLineField(area.id, prog.id, line.id, 'allocated', e.target.value)}
+                                            className={inputCls} style={{ width: 96 }} />
+                                        : <span className="font-semibold text-gray-700">{fmt(line.allocated)}</span>
+                                      }
+                                    </td>
+
+                                    {/* Q1–Q4 — editable */}
                                     {(['q1', 'q2', 'q3', 'q4'] as const).map(q => (
-                                      <td key={q} className={`px-3 py-2.5 text-right ${
-                                        highlight && activeQuarter === q
+                                      <td key={q} className={`px-3 py-2 text-right ${
+                                        !editing && highlight && activeQuarter === q
                                           ? 'font-bold text-blue-700 bg-blue-50'
-                                          : line[q] === 0 ? 'text-gray-300' : 'text-gray-600'
+                                          : ''
                                       }`}>
-                                        {line[q] === 0 ? '—' : fmt(line[q])}
+                                        {editing
+                                          ? <input type="number" defaultValue={line[q]}
+                                              onChange={e => setLineField(area.id, prog.id, line.id, q, e.target.value)}
+                                              className={inputCls} style={{ width: 84 }} />
+                                          : <span className={line[q] === 0 ? 'text-gray-300' : 'text-gray-600'}>
+                                              {line[q] === 0 ? '—' : fmt(line[q])}
+                                            </span>
+                                        }
                                       </td>
                                     ))}
+
                                     <td className="px-3 py-2.5 text-right font-bold text-amber-700">{fmt(lineSpent)}</td>
                                     <td className={`px-3 py-2.5 text-right font-semibold ${lineRemaining < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
                                       {fmt(lineRemaining)}

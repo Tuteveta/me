@@ -1,36 +1,283 @@
 import type {
   Project, KPI, Report, DashboardStats,
-  TrendPoint, BudgetPoint, ManagedUser, AnnualWorkplan
+  TrendPoint, BudgetPoint, ManagedUser, AnnualWorkplan,
 } from '@/types'
-
-export const PROJECTS: Project[] = []
-
-export const KPIS: KPI[] = []
 
 export const REPORTS: Report[] = []
 
+export const KPIS: KPI[] = [
+  {
+    id: 'kpi-001',
+    name: 'Government Cloud Adoption Rate',
+    program: 'Government Cloud & Information Delivery',
+    unit: '%',
+    target: 75,
+    actual: 52,
+    baseline: 20,
+    status: 'at-risk',
+    trend: 'up',
+    lastUpdated: '2026-03-15',
+    history: [
+      { month: 'Oct', value: 28, target: 40 },
+      { month: 'Nov', value: 35, target: 50 },
+      { month: 'Dec', value: 41, target: 55 },
+      { month: 'Jan', value: 45, target: 60 },
+      { month: 'Feb', value: 49, target: 65 },
+      { month: 'Mar', value: 52, target: 70 },
+    ],
+  },
+  {
+    id: 'kpi-002',
+    name: 'Cybersecurity Incidents Resolved',
+    program: 'Cyber Security',
+    unit: 'incidents',
+    target: 100,
+    actual: 91,
+    baseline: 0,
+    status: 'on-track',
+    trend: 'up',
+    lastUpdated: '2026-03-15',
+    history: [
+      { month: 'Oct', value: 12, target: 15 },
+      { month: 'Nov', value: 28, target: 30 },
+      { month: 'Dec', value: 45, target: 45 },
+      { month: 'Jan', value: 60, target: 60 },
+      { month: 'Feb', value: 78, target: 75 },
+      { month: 'Mar', value: 91, target: 85 },
+    ],
+  },
+  {
+    id: 'kpi-003',
+    name: 'ICT Policy Documents Reviewed',
+    program: 'Policy & M/E',
+    unit: 'documents',
+    target: 10,
+    actual: 13,
+    baseline: 3,
+    status: 'exceeded',
+    trend: 'up',
+    lastUpdated: '2026-03-10',
+    history: [
+      { month: 'Oct', value: 3, target: 3 },
+      { month: 'Nov', value: 5, target: 4 },
+      { month: 'Dec', value: 7, target: 5 },
+      { month: 'Jan', value: 9, target: 7 },
+      { month: 'Feb', value: 11, target: 8 },
+      { month: 'Mar', value: 13, target: 10 },
+    ],
+  },
+  {
+    id: 'kpi-004',
+    name: 'Partnership MOUs Signed',
+    program: 'Partnership & Sector Funding',
+    unit: 'MOUs',
+    target: 6,
+    actual: 2,
+    baseline: 0,
+    status: 'off-track',
+    trend: 'stable',
+    lastUpdated: '2026-03-01',
+    history: [
+      { month: 'Oct', value: 0, target: 1 },
+      { month: 'Nov', value: 0, target: 2 },
+      { month: 'Dec', value: 1, target: 3 },
+      { month: 'Jan', value: 1, target: 4 },
+      { month: 'Feb', value: 2, target: 5 },
+      { month: 'Mar', value: 2, target: 6 },
+    ],
+  },
+  {
+    id: 'kpi-005',
+    name: 'DevOps Pipeline Deployments',
+    program: 'DevOps',
+    unit: 'deployments',
+    target: 50,
+    actual: 22,
+    baseline: 0,
+    status: 'at-risk',
+    trend: 'up',
+    lastUpdated: '2026-03-20',
+    history: [
+      { month: 'Oct', value: 2, target: 5 },
+      { month: 'Nov', value: 5, target: 10 },
+      { month: 'Dec', value: 8, target: 15 },
+      { month: 'Jan', value: 12, target: 25 },
+      { month: 'Feb', value: 17, target: 35 },
+      { month: 'Mar', value: 22, target: 45 },
+    ],
+  },
+  {
+    id: 'kpi-006',
+    name: 'Staff ICT Training Completion',
+    program: 'Corporate Services',
+    unit: 'officers',
+    target: 180,
+    actual: 142,
+    baseline: 0,
+    status: 'on-track',
+    trend: 'up',
+    lastUpdated: '2026-03-18',
+    history: [
+      { month: 'Oct', value: 20, target: 30 },
+      { month: 'Nov', value: 45, target: 60 },
+      { month: 'Dec', value: 72, target: 90 },
+      { month: 'Jan', value: 98, target: 120 },
+      { month: 'Feb', value: 122, target: 150 },
+      { month: 'Mar', value: 142, target: 165 },
+    ],
+  },
+]
+
+export const PROJECTS: Project[] = [
+  {
+    id: 'proj-001',
+    name: 'GovCloud Migration Phase 1',
+    program: 'Government Cloud & Information Delivery',
+    status: 'active',
+    completion: 62,
+    budget: 2500000,
+    spent: 1420000,
+    startDate: '2025-07-01',
+    endDate: '2026-06-30',
+    lead: 'Lizarhmarie Warike',
+    beneficiaries: 42000,
+    description: 'Migration of government data systems and services to a centralised cloud infrastructure, improving reliability, security, and accessibility across all PNG government agencies.',
+    milestones: [
+      { id: 'm1-1', title: 'Infrastructure Assessment Complete', dueDate: '2025-09-30', completed: true },
+      { id: 'm1-2', title: 'Pilot Agency Migration (5 agencies)', dueDate: '2025-12-31', completed: true },
+      { id: 'm1-3', title: 'Security Certification', dueDate: '2026-02-28', completed: true },
+      { id: 'm1-4', title: 'Phase 1 Rollout (20 agencies)', dueDate: '2026-04-30', completed: false },
+      { id: 'm1-5', title: 'User Training & Handover', dueDate: '2026-06-30', completed: false },
+    ],
+  },
+  {
+    id: 'proj-002',
+    name: 'National Cybersecurity Framework',
+    program: 'Cyber Security',
+    status: 'active',
+    completion: 38,
+    budget: 1800000,
+    spent: 620000,
+    startDate: '2025-10-01',
+    endDate: '2026-09-30',
+    lead: 'Hamilton Vagi',
+    beneficiaries: 220000,
+    description: 'Development and implementation of a national cybersecurity policy framework, incident response protocols, and capacity building for all PNG government ICT systems.',
+    milestones: [
+      { id: 'm2-1', title: 'Threat Landscape Assessment', dueDate: '2025-12-31', completed: true },
+      { id: 'm2-2', title: 'Framework Draft Published', dueDate: '2026-02-28', completed: true },
+      { id: 'm2-3', title: 'Stakeholder Consultations', dueDate: '2026-04-30', completed: false },
+      { id: 'm2-4', title: 'Framework Finalisation & Endorsement', dueDate: '2026-07-31', completed: false },
+      { id: 'm2-5', title: 'Agency Implementation Rollout', dueDate: '2026-09-30', completed: false },
+    ],
+  },
+  {
+    id: 'proj-003',
+    name: 'DICT ICT Policy Review 2025',
+    program: 'Policy & M/E',
+    status: 'completed',
+    completion: 100,
+    budget: 350000,
+    spent: 318000,
+    startDate: '2025-01-15',
+    endDate: '2025-12-31',
+    lead: 'Nathan Randa',
+    beneficiaries: 5000,
+    description: 'Comprehensive review and update of DICT internal ICT policies, procedures, and regulatory frameworks to align with current international standards and PNG Government directives.',
+    milestones: [
+      { id: 'm3-1', title: 'Policy Inventory & Gap Analysis', dueDate: '2025-03-31', completed: true },
+      { id: 'm3-2', title: 'Draft Policy Documents', dueDate: '2025-07-31', completed: true },
+      { id: 'm3-3', title: 'Stakeholder Review', dueDate: '2025-09-30', completed: true },
+      { id: 'm3-4', title: 'Secretary Endorsement', dueDate: '2025-11-30', completed: true },
+      { id: 'm3-5', title: 'Official Publication', dueDate: '2025-12-31', completed: true },
+    ],
+  },
+  {
+    id: 'proj-004',
+    name: 'CI/CD Pipeline Infrastructure',
+    program: 'DevOps',
+    status: 'on-hold',
+    completion: 25,
+    budget: 920000,
+    spent: 210000,
+    startDate: '2025-08-01',
+    endDate: '2026-07-31',
+    lead: 'Jesse Biribudo',
+    beneficiaries: 800,
+    description: 'Setup of continuous integration and deployment pipeline infrastructure for government software development projects, enabling automated testing and reliable software delivery.',
+    milestones: [
+      { id: 'm4-1', title: 'Requirements & Architecture Design', dueDate: '2025-09-30', completed: true },
+      { id: 'm4-2', title: 'Pilot Environment Setup', dueDate: '2025-12-31', completed: false },
+      { id: 'm4-3', title: 'Integration with GovCloud', dueDate: '2026-03-31', completed: false },
+      { id: 'm4-4', title: 'Developer Training', dueDate: '2026-05-31', completed: false },
+    ],
+  },
+  {
+    id: 'proj-005',
+    name: 'Pacific ICT Partnership Program',
+    program: 'Partnership & Sector Funding',
+    status: 'active',
+    completion: 50,
+    budget: 1200000,
+    spent: 580000,
+    startDate: '2025-04-01',
+    endDate: '2026-03-31',
+    lead: 'Hera John',
+    beneficiaries: 15000,
+    description: 'Strengthening ICT partnerships with Pacific Island nations and international development partners to advance digital transformation and sector funding for PNG ICT development.',
+    milestones: [
+      { id: 'm5-1', title: 'Partner Mapping & Outreach', dueDate: '2025-06-30', completed: true },
+      { id: 'm5-2', title: 'MOU Negotiations', dueDate: '2025-09-30', completed: true },
+      { id: 'm5-3', title: 'Joint Programme Launch Events', dueDate: '2025-12-31', completed: true },
+      { id: 'm5-4', title: 'Mid-term Review & Reporting', dueDate: '2026-01-31', completed: false },
+      { id: 'm5-5', title: 'Final Partnership Report', dueDate: '2026-03-31', completed: false },
+    ],
+  },
+]
+
 export function getDashboardStats(): DashboardStats {
+  const active    = PROJECTS.filter(p => p.status === 'active').length
+  const completed = PROJECTS.filter(p => p.status === 'completed').length
+  const delayed   = PROJECTS.filter(p => p.status === 'delayed').length
   return {
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    delayedProjects: 0,
-    kpisOnTrack: 0,
-    kpisAtRisk: 0,
-    kpisOffTrack: 0,
-    totalBudget: 0,
-    totalSpent: 0,
-    reportsThisQuarter: 0,
-    reportsOverdue: 0,
-    beneficiariesReached: 0,
+    totalProjects:        PROJECTS.length,
+    activeProjects:       active,
+    completedProjects:    completed,
+    delayedProjects:      delayed,
+    kpisOnTrack:          KPIS.filter(k => k.status === 'on-track' || k.status === 'exceeded').length,
+    kpisAtRisk:           KPIS.filter(k => k.status === 'at-risk').length,
+    kpisOffTrack:         KPIS.filter(k => k.status === 'off-track').length,
+    totalBudget:          PROJECTS.reduce((s, p) => s + p.budget, 0),
+    totalSpent:           PROJECTS.reduce((s, p) => s + p.spent, 0),
+    reportsThisQuarter:   0,
+    reportsOverdue:       0,
+    beneficiariesReached: PROJECTS.reduce((s, p) => s + p.beneficiaries, 0),
   }
 }
 
-export const KPI_TREND: TrendPoint[] = []
+export const KPI_TREND: TrendPoint[] = [
+  { month: 'Oct', value: 42 },
+  { month: 'Nov', value: 55 },
+  { month: 'Dec', value: 61 },
+  { month: 'Jan', value: 68 },
+  { month: 'Feb', value: 74 },
+  { month: 'Mar', value: 79 },
+]
 
-export const BUDGET_BY_PROGRAM: BudgetPoint[] = []
+export const BUDGET_BY_PROGRAM: BudgetPoint[] = [
+  { program: 'Government Cloud & Information Delivery', budget: 2500000, spent: 1420000 },
+  { program: 'Cyber Security',                          budget: 1800000, spent: 620000  },
+  { program: 'Policy & M/E',                            budget: 350000,  spent: 318000  },
+  { program: 'DevOps',                                  budget: 920000,  spent: 210000  },
+  { program: 'Partnership & Sector Funding',            budget: 1200000, spent: 580000  },
+]
 
-export const PROJECT_STATUS_PIE: { label: string; value: number; color: string }[] = []
+export const PROJECT_STATUS_PIE: { label: string; value: number; color: string }[] = [
+  { label: 'Active',    value: 3, color: '#2563EB' },
+  { label: 'Completed', value: 1, color: '#10B981' },
+  { label: 'On Hold',   value: 1, color: '#F59E0B' },
+  { label: 'Delayed',   value: 0, color: '#EF4444' },
+]
 
 export const WORKPLANS: AnnualWorkplan[] = []
 

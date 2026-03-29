@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DICT M&amp;E Dashboard — Full System Functions Report</title>
+<style>
+  /* ── Reset ─────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Base ──────────────────────────────────────────────── */
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10pt;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.55;
+  }
+
+  /* ── Page layout ───────────────────────────────────────── */
+  .page {
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 18mm 18mm 16mm 18mm;
+  }
+
+  /* ── Cover ─────────────────────────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-bottom: 3px solid #1e3a8a;
+    padding-bottom: 24mm;
+    page-break-after: always;
+  }
+  .cover-logo {
+    width: 72px; height: 72px;
+    background: #1e3a8a;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .cover-logo svg { width: 40px; height: 40px; fill: #fff; }
+  .cover-dept {
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+  .cover-title {
+    font-size: 26pt;
+    font-weight: 900;
+    color: #1e3a8a;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .cover-subtitle {
+    font-size: 12pt;
+    color: #475569;
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 320px;
+    margin: 0 auto;
+    text-align: left;
+  }
+  .cover-meta-item label {
+    display: block;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    margin-bottom: 2px;
+  }
+  .cover-meta-item span {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .cover-classification {
+    margin-top: 40px;
+    padding: 8px 20px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    font-size: 8pt;
+    font-weight: 700;
+    color: #1d4ed8;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── TOC ────────────────────────────────────────────────── */
+  .toc { page-break-after: always; padding-top: 8mm; }
+  .toc-title {
+    font-size: 14pt;
+    font-weight: 900;
+    color: #1e3a8a;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+  .toc-section { margin-bottom: 4px; }
+  .toc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 3px 0;
+    border-bottom: 1px dotted #cbd5e1;
+  }
+  .toc-row.level1 { font-weight: 700; font-size: 9.5pt; color: #1e293b; }
+  .toc-row.level2 { padding-left: 16px; font-size: 8.5pt; color: #475569; }
+  .toc-page { font-size: 8pt; color: #94a3b8; white-space: nowrap; padding-left: 8px; }
+
+  /* ── Section headings ──────────────────────────────────── */
+  .section-break { page-break-before: always; padding-top: 6mm; }
+
+  h1.section-title {
+    font-size: 16pt;
+    font-weight: 900;
+    color: #1e3a8a;
+    border-left: 5px solid #1e3a8a;
+    padding-left: 12px;
+    margin-bottom: 16px;
+    margin-top: 4mm;
+  }
+
+  h2.module-title {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 7px 12px;
+    border-radius: 6px;
+    border-left: 4px solid #3b82f6;
+    margin-top: 16px;
+    margin-bottom: 10px;
+  }
+
+  h3.sub-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  h3.sub-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    flex-shrink: 0;
+  }
+
+  p { margin-bottom: 6px; font-size: 9.5pt; color: #334155; }
+
+  /* ── Tables ─────────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 10px 0 14px 0;
+  }
+  thead tr { background: #1e3a8a; color: #fff; }
+  thead th {
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 8pt;
+    letter-spacing: 0.03em;
+  }
+  thead th.center { text-align: center; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eff6ff; }
+  tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    color: #1e293b;
+  }
+  tbody td.center { text-align: center; }
+  tbody td strong { font-weight: 700; }
+
+  /* ── Badges ─────────────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 20px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-amber  { background: #fef3c7; color: #92400e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-teal   { background: #ccfbf1; color: #134e4a; }
+  .badge-gray   { background: #f1f5f9; color: #475569; }
+
+  /* ── Check/cross ────────────────────────────────────────── */
+  .check { color: #16a34a; font-weight: 700; font-size: 11pt; }
+  .dash  { color: #cbd5e1; font-size: 10pt; }
+
+  /* ── Callout box ────────────────────────────────────────── */
+  .callout {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 9pt;
+    color: #1e40af;
+  }
+  .callout-amber {
+    background: #fffbeb;
+    border-color: #fcd34d;
+    border-left-color: #f59e0b;
+    color: #92400e;
+  }
+  .callout-green {
+    background: #f0fdf4;
+    border-color: #86efac;
+    border-left-color: #22c55e;
+    color: #14532d;
+  }
+
+  /* ── Flow diagram (text) ────────────────────────────────── */
+  .flow {
+    font-family: 'Courier New', monospace;
+    font-size: 8.5pt;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: #334155;
+    line-height: 1.8;
+    margin: 8px 0;
+  }
+  .flow .arrow { color: #3b82f6; font-weight: 700; }
+  .flow .stage { color: #7c3aed; font-weight: 700; }
+  .flow .note  { color: #64748b; font-style: italic; }
+
+  /* ── Two-column grid ────────────────────────────────────── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 10px 0;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  /* ── Stat card ──────────────────────────────────────────── */
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .stat-card .stat-num {
+    font-size: 18pt;
+    font-weight: 900;
+    color: #1e3a8a;
+    line-height: 1.1;
+  }
+  .stat-card .stat-label {
+    font-size: 7.5pt;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* ── List ───────────────────────────────────────────────── */
+  ul.fn-list, ol.fn-list {
+    margin: 6px 0 10px 18px;
+    font-size: 9pt;
+    color: #334155;
+  }
+  ul.fn-list li, ol.fn-list li { margin-bottom: 3px; }
+
+  /* ── Footer ─────────────────────────────────────────────── */
+  .page-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 10mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18mm;
+    font-size: 7pt;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+  }
+
+  /* ── Print ──────────────────────────────────────────────── */
+  @media print {
+    @page {
+      size: A4;
+      margin: 16mm 18mm 20mm 18mm;
+    }
+    body { font-size: 9pt; }
+    .page { padding: 0; max-width: 100%; }
+    .no-print { display: none !important; }
+    .section-break { page-break-before: always; }
+    h2.module-title { page-break-after: avoid; }
+    h3.sub-title { page-break-after: avoid; }
+    tr { page-break-inside: avoid; }
+    .page-footer { position: fixed; }
+  }
+
+  /* ── Print button (screen only) ─────────────────────────── */
+  .print-btn {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: #1e3a8a;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 10pt;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(30,58,138,0.35);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .print-btn:hover { background: #1e40af; }
+  @media print { .print-btn { display: none !important; } }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">
+  &#128438; Save as PDF
+</button>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-logo">
+    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
+  </div>
+  <div class="cover-dept">Department of Information &amp; Communications Technology — PNG</div>
+  <div class="cover-title">M&amp;E Dashboard<br/>System Functions Report</div>
+  <div class="cover-subtitle">Full Capability Overview — Management &amp; Team Reference</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <label>Prepared By</label>
+      <span>M&amp;E Unit — DICT</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Date</label>
+      <span>March 2026</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Fiscal Year</label>
+      <span>FY 2025/26</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Version</label>
+      <span>1.0 — Production</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Platform</label>
+      <span>Next.js 16 / AWS</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Total Modules</label>
+      <span>21 modules / 25 pages</span>
+    </div>
+  </div>
+  <div class="cover-classification">Internal Use — DICT Staff Only</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ TOC -->
+<div class="toc">
+  <div class="toc-title">Table of Contents</div>
+
+  <div class="toc-row level1"><span>1. System Overview &amp; Statistics</span><span class="toc-page">3</span></div>
+  <div class="toc-row level1"><span>2. User Roles &amp; Access</span><span class="toc-page">3</span></div>
+  <div class="toc-row level1"><span>3. Overview Dashboard</span><span class="toc-page">4</span></div>
+  <div class="toc-row level1"><span>4. Module Functions</span><span class="toc-page">5</span></div>
+  <div class="toc-row level2"><span>4.1 Annual Workplan</span><span class="toc-page">5</span></div>
+  <div class="toc-row level2"><span>4.2 Quarterly Reports</span><span class="toc-page">5</span></div>
+  <div class="toc-row level2"><span>4.3 Budget Plan</span><span class="toc-page">6</span></div>
+  <div class="toc-row level2"><span>4.4 Funding &amp; Request Workflow</span><span class="toc-page">7</span></div>
+  <div class="toc-row level2"><span>4.5 Expenditure Budget</span><span class="toc-page">8</span></div>
+  <div class="toc-row level2"><span>4.6 M&amp;E Summary</span><span class="toc-page">8</span></div>
+  <div class="toc-row level2"><span>4.7 Reports Registry</span><span class="toc-page">9</span></div>
+  <div class="toc-row level2"><span>4.8 KPI Monitoring</span><span class="toc-page">9</span></div>
+  <div class="toc-row level2"><span>4.9 Projects</span><span class="toc-page">9</span></div>
+  <div class="toc-row level2"><span>4.10 Corporate Plan</span><span class="toc-page">9</span></div>
+  <div class="toc-row level2"><span>4.11 Organisation Chart</span><span class="toc-page">9</span></div>
+  <div class="toc-row level2"><span>4.12 My Team &amp; Task Management</span><span class="toc-page">10</span></div>
+  <div class="toc-row level2"><span>4.13 My Tasks (Officers)</span><span class="toc-page">10</span></div>
+  <div class="toc-row level2"><span>4.14 User Management</span><span class="toc-page">10</span></div>
+  <div class="toc-row level2"><span>4.15 Help &amp; User Guide</span><span class="toc-page">10</span></div>
+  <div class="toc-row level1"><span>5. Approval Chain Workflows</span><span class="toc-page">11</span></div>
+  <div class="toc-row level1"><span>6. Data Export Capabilities</span><span class="toc-page">11</span></div>
+  <div class="toc-row level1"><span>7. Page Access Matrix</span><span class="toc-page">12</span></div>
+  <div class="toc-row level1"><span>8. Data Storage &amp; Persistence</span><span class="toc-page">12</span></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 1 -->
+<div class="section-break">
+  <h1 class="section-title">1. System Overview &amp; Statistics</h1>
+
+  <div class="callout">
+    The <strong>DICT M&amp;E Dashboard</strong> is a web-based monitoring and evaluation platform for the Department of Information &amp; Communications Technology, Papua New Guinea. It supports planning, reporting, funding approval, and performance tracking across all four functional wings of DICT.
+  </div>
+
+  <div class="grid-3" style="margin-top:14px;">
+    <div class="stat-card"><div class="stat-num">25</div><div class="stat-label">Total Pages</div></div>
+    <div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Functional Modules</div></div>
+    <div class="stat-card"><div class="stat-num">7</div><div class="stat-label">User Roles</div></div>
+    <div class="stat-card"><div class="stat-num">4</div><div class="stat-label">Functional Wings</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Request Types</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">CSV Export Points</div></div>
+  </div>
+
+  <table style="margin-top:14px;">
+    <thead><tr>
+      <th>Property</th><th>Detail</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>System Name</strong></td><td>DICT M&amp;E Dashboard</td></tr>
+      <tr><td><strong>Organisation</strong></td><td>Department of Information &amp; Communications Technology — PNG</td></tr>
+      <tr><td><strong>Platform</strong></td><td>Next.js 16.1 (App Router), TypeScript, Tailwind CSS v4</td></tr>
+      <tr><td><strong>Authentication</strong></td><td>AWS Cognito — username &amp; password</td></tr>
+      <tr><td><strong>Data Layer</strong></td><td>localStorage (current) → AWS DynamoDB / AppSync (production)</td></tr>
+      <tr><td><strong>Fiscal Year</strong></td><td>FY 2025/26 (July 2025 – June 2026)</td></tr>
+      <tr><td><strong>ToR Compliance</strong></td><td>DICT M&amp;E Dashboard Terms of Reference — Q1 2026</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 2 -->
+<div class="section-break">
+  <h1 class="section-title">2. User Roles &amp; Access</h1>
+
+  <p>The system implements seven distinct user roles. Each role receives a tailored dashboard and access to specific modules. Role assignment is managed by the Super Administrator via User Management.</p>
+
+  <table>
+    <thead><tr>
+      <th>Role Code</th><th>Title</th><th>Named Staff</th><th>System Label</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-red">super</span></td>
+        <td>Secretary</td>
+        <td>Steven Maitainaho</td>
+        <td>System Administrator</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-purple">deputy</span></td>
+        <td>Deputy Secretary</td>
+        <td>Flierl Shongol, Jessy Sekere</td>
+        <td>Deputy</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-teal">dcs</span></td>
+        <td>Director Corporate Services</td>
+        <td>Maisen Windu</td>
+        <td>Director</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-purple">executive</span></td>
+        <td>Executive Manager</td>
+        <td>David Kapi, Hera John, Lizarhmarie Warike, Joshua Pomalo, Hamilton Vagi</td>
+        <td>Executive</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-amber">admin</span></td>
+        <td>Branch / Activity Manager</td>
+        <td>Thomson, Nathan Randa, Narson, Henry Konaka, Bernard Sike, Nancy Kanasa, Jesse Biribudo, Billy Seri, Bartch Morris, Marian Rema, Valu Rova</td>
+        <td>Manager</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-green">finance</span></td>
+        <td>Finance &amp; Administration Manager</td>
+        <td>William Kimia</td>
+        <td>Finance Manager</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-gray">officer</span></td>
+        <td>Staff Officer</td>
+        <td>Created by managers</td>
+        <td>Officer</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 3 -->
+<h1 class="section-title" style="margin-top:16px;">3. Overview Dashboard (<code>/dashboard</code>)</h1>
+
+<p>The dashboard renders a <strong>role-specific view</strong> for every user — no generic landing. Content adapts automatically based on the logged-in user's role and division.</p>
+
+<table>
+  <thead><tr><th>Role</th><th>Dashboard Content</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="badge badge-red">Secretary</span></td>
+      <td>System-wide request pipeline counts by stage · Budget by division (committed vs pipeline vs available) · Total approved workplans · Organisational overview · All quick links</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-purple">Deputy / DCS</span></td>
+      <td>Pending approvals queue · Approval history · System-wide and per-division budget totals · Recent requests feed · Quick links to Approvals, Finance, Workplan, Quarterly Reports</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-purple">Executive</span></td>
+      <td>My division budget (committed vs pipeline vs available) · My pending requests by stage · Team workload (officers + tasks) · Quarterly reports awaiting review (count badge)</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-amber">Branch Manager</span></td>
+      <td>My requests with current stage status · My team (officers, active tasks) · Division budget snapshot · Quick links to New Request, Workplan, Quarterly Reports, Budget Plan</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">Finance Manager</span></td>
+      <td>Finance-stage queue · Acquittal queue · Expenditure summary links · Quick links to Finance, Budget Plan, Expenditure Budget, Reports</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-gray">Officer</span></td>
+      <td>My tasks (priority, due dates, progress %) · My requests (leave/travel/IT support) · Quick links to My Tasks, My Requests, My Profile</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 4 -->
+<div class="section-break">
+  <h1 class="section-title">4. Module Functions</h1>
+
+  <!-- 4.1 -->
+  <h2 class="module-title">4.1 Annual Workplan &nbsp;<code>/workplan</code></h2>
+  <p>Divisions create annual plans with Key Results Areas (KRAs) and KPIs for each fiscal year. Approved workplans become the source-of-truth for funding requests and quarterly report auto-population.</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 class="sub-title">Core Creation</h3>
+      <ul class="fn-list">
+        <li>Set fiscal year, division, objective, and total budget (PGK)</li>
+        <li>Link to a Corporate Strategic Priority — KRAs auto-fill from the priority objectives</li>
+        <li>Add/edit KRAs with title, description, and weight (%)</li>
+        <li>Per KRA: add KPIs with name, unit, baseline, Q1–Q4 targets, annual target, responsible officer, measurement method</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="sub-title">Status Workflow &amp; Controls</h3>
+      <ul class="fn-list">
+        <li><span class="badge badge-gray">Draft</span> → <span class="badge badge-blue">Submitted</span> → <span class="badge badge-green">Approved</span> → <span class="badge badge-amber">Active</span></li>
+        <li>Submit for management approval</li>
+        <li>Executive/Deputy/DCS approves or activates</li>
+        <li>Approved workplans link to Funding Requests and Quarterly Reports</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4.2 -->
+  <h2 class="module-title">4.2 Quarterly Reports &nbsp;<code>/quarterly-report</code></h2>
+  <p>Branches submit quarterly performance reports against KRAs and activities. Executive Managers review and add timestamped comments.</p>
+
+  <h3 class="sub-title">Branch Manager Functions</h3>
+  <ul class="fn-list">
+    <li><strong>Create Report</strong> — Set Wing, Division, Branch, Fiscal Year; select quarters (Q1–Q4)</li>
+    <li><strong>Auto-populate from Workplan</strong> — Link approved workplan; entries generated from KRAs with KPI targets pre-filled</li>
+    <li><strong>Edit entries</strong> — 11 columns: Quarter · KRA · Program/Project · Description of Key Activities · KPIs · Expected Outcomes · Approved Budget (K) · Quarter Expenditure (K) · Status · Justification/Remarks · Officers in Charge</li>
+    <li><strong>Status options per entry:</strong> Completed · Ongoing · Not Started · Deferred</li>
+    <li>Add/delete rows · Submit report · Print with DICT letterhead · Export CSV</li>
+  </ul>
+
+  <h3 class="sub-title">Executive / Management Functions</h3>
+  <ul class="fn-list">
+    <li>Review queue with count badge on sidebar and dashboard</li>
+    <li>Mark as Reviewed — add timestamped management comment (read-only to submitting officer)</li>
+    <li>Delete report with confirmation</li>
+  </ul>
+
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>Who Can Act</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-gray">Draft</span></td><td>Being prepared, not yet submitted</td><td>Branch Manager (edit/delete)</td></tr>
+      <tr><td><span class="badge badge-blue">Submitted</span></td><td>Awaiting review</td><td>Executive Manager (review)</td></tr>
+      <tr><td><span class="badge badge-green">Reviewed</span></td><td>Reviewed with comment</td><td>Read-only for all</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 4.3 -->
+<h2 class="module-title">4.3 Budget Plan &nbsp;<code>/budget-plan</code></h2>
+<p>Branches plan and track budget line items — estimated costs vs actual utilization — submitted for management review each quarter. Plans support eight expenditure categories with auto-calculated utilization rates and variance summaries.</p>
+
+<h3 class="sub-title">Branch Manager Functions</h3>
+<ul class="fn-list">
+  <li><strong>Create Plan</strong> — Set Wing, Division, Branch, Fiscal Year, and Plan Title</li>
+  <li><strong>Add line items</strong> — Category, Description, Estimated Cost (K), Utilized (K), Justification; utilization % auto-calculated per item</li>
+  <li><strong>8 budget categories:</strong> Personnel · Goods &amp; Services · Capital · Training · Travel · ICT · Consultancy · Operational</li>
+  <li><strong>Summary totals</strong> — Total Estimated (K), Total Utilized (K), Variance (Surplus/Deficit), Overall Utilization %</li>
+  <li>Add/edit/delete line items (Draft state only)</li>
+  <li><strong>Submit</strong> — advances plan to Submitted; locked for editing</li>
+  <li><strong>Print</strong> — formatted plan with DICT letterhead</li>
+  <li><strong>Export CSV</strong> — all line items (Category, Description, Estimated Cost, Utilized, Justification)</li>
+  <li>Delete plan (Draft state only, with confirmation)</li>
+</ul>
+
+<h3 class="sub-title">Executive / Management Functions</h3>
+<ul class="fn-list">
+  <li>Review all submitted budget line items with per-item utilization progress bars</li>
+  <li>Add Management Review comment — visible to Branch Manager after review</li>
+  <li>Mark as Reviewed — timestamped with reviewer name and date</li>
+  <li>Review queue count badge on sidebar and dashboard widget</li>
+</ul>
+
+<h3 class="sub-title">Finance Manager Functions</h3>
+<ul class="fn-list">
+  <li>View all budget plans across all Wings and Divisions (read-only)</li>
+  <li>Filter plans by Division, Fiscal Year, and Status</li>
+  <li>Cross-division totals — aggregate Estimated vs Utilized by category</li>
+  <li>Access via quick link on Finance dashboard widget</li>
+</ul>
+
+<h3 class="sub-title">List View (All Roles)</h3>
+<ul class="fn-list">
+  <li>Status filter cards: All · Draft · Submitted · Reviewed</li>
+  <li>Search by plan title or branch name</li>
+  <li>Filter by Division and Fiscal Year</li>
+  <li>Table columns: Title, Division, Fiscal Year, Total Estimated (K), Total Utilized (K), Utilization %, Status, Submitted By, Date</li>
+</ul>
+
+<table>
+  <thead><tr><th>Status</th><th>Meaning</th><th>Who Can Act</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-gray">Draft</span></td><td>Being prepared, not yet submitted</td><td>Branch Manager (edit items / delete plan)</td></tr>
+    <tr><td><span class="badge badge-blue">Submitted</span></td><td>Awaiting management review</td><td>Executive Manager (review + comment)</td></tr>
+    <tr><td><span class="badge badge-green">Reviewed</span></td><td>Reviewed with management comment</td><td>Read-only for all</td></tr>
+  </tbody>
+</table>
+
+<!-- 4.4 -->
+<div class="section-break">
+  <h1 class="section-title" style="font-size:13pt; margin-top:2mm;">4.4 Funding &amp; Request Workflow &nbsp;<code>/requests</code> &nbsp;<code>/approvals</code> &nbsp;<code>/finance</code></h1>
+
+  <p>Manages the full lifecycle of all staff requests through a defined role-based approval chain. Six request types with different routing logic.</p>
+
+  <table>
+    <thead><tr>
+      <th>Request Type</th><th>Approval Chain</th><th>Funding Required</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>Funding Request</strong></td><td>EM → Deputy → Director → Finance → Acquittal</td><td><span class="badge badge-green">Yes</span></td></tr>
+      <tr><td><strong>Procurement Request</strong></td><td>EM → Deputy → Director → Finance → Acquittal</td><td><span class="badge badge-green">Yes</span></td></tr>
+      <tr><td><strong>Training Request</strong></td><td>EM → Deputy</td><td><span class="badge badge-gray">No</span></td></tr>
+      <tr><td><strong>Policy / Compliance</strong></td><td>EM → Director</td><td><span class="badge badge-gray">No</span></td></tr>
+      <tr><td><strong>Leave / Travel</strong></td><td>EM only</td><td><span class="badge badge-gray">No</span></td></tr>
+      <tr><td><strong>IT Support</strong></td><td>EM only</td><td><span class="badge badge-gray">No</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid-2" style="margin-top:10px;">
+    <div>
+      <h3 class="sub-title">Officer / Manager (My Requests)</h3>
+      <ul class="fn-list">
+        <li>Submit new request — select type, fill details, attach documents</li>
+        <li>Link funding requests to a specific Workplan and KRA</li>
+        <li>Visual approval chain tracker showing each approver's decision</li>
+        <li>Submit acquittal report (notes + attachments) after Finance approval</li>
+        <li>Track stage in real time</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="sub-title">Approvers (EM / Deputy / DCS)</h3>
+      <ul class="fn-list">
+        <li><strong>Approve</strong> — advance to next stage with comment</li>
+        <li><strong>Reject</strong> — terminate with reason</li>
+        <li><strong>Defer / Hold</strong> — pause pending more information (can un-defer)</li>
+        <li>View full prior approval chain history</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Finance Manager (Finance Page)</h3>
+  <ul class="fn-list">
+    <li>Finance-stage approvals — review and approve/reject requests that completed the management chain</li>
+    <li>Assign DICT budget line code to approved requests</li>
+    <li>Acquittal review — accept or request revision on submitted acquittal reports</li>
+    <li>Close request after acquittal accepted — final record keeping</li>
+  </ul>
+
+  <table style="margin-top:10px;">
+    <thead><tr><th>Stage</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-amber">Pending EM</span></td><td>Awaiting Executive Manager decision</td></tr>
+      <tr><td><span class="badge badge-purple">Pending Deputy</span></td><td>Awaiting Deputy Secretary decision</td></tr>
+      <tr><td><span class="badge badge-teal">Pending DCS</span></td><td>Awaiting Director Corporate Services decision</td></tr>
+      <tr><td><span class="badge badge-blue">Pending Finance</span></td><td>Awaiting Finance Manager approval and budget line assignment</td></tr>
+      <tr><td><span class="badge badge-amber">Pending Acquittal</span></td><td>Finance approved — officer must submit acquittal report</td></tr>
+      <tr><td><span class="badge badge-teal">Acquittal Review</span></td><td>Finance reviewing submitted acquittal</td></tr>
+      <tr><td><span class="badge badge-green">Closed</span></td><td>Fully completed and acquitted</td></tr>
+      <tr><td><span class="badge badge-red">Rejected</span></td><td>Rejected at any stage</td></tr>
+      <tr><td><span class="badge badge-gray">Deferred</span></td><td>On hold — awaiting additional information</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 4.5 -->
+<h2 class="module-title">4.5 Expenditure Budget &nbsp;<code>/budget</code></h2>
+
+<div class="grid-2">
+  <div>
+    <h3 class="sub-title">View Functions (All roles)</h3>
+    <ul class="fn-list">
+      <li>Total Budget, Expended, Remaining, Utilisation % — summary cards</li>
+      <li>Quarterly filter (Q1 / Q2 / Q3 / Q4 / All)</li>
+      <li>Quarterly breakdown panel with % of quarterly budget</li>
+      <li>Accordion per functional area — expand/collapse</li>
+      <li>Per-program: Executive Manager, spent vs allocated, % expended</li>
+      <li>Per-line table: Allocated, Q1–Q4, Total Spent, Remaining, % bar</li>
+      <li>Grand total footer: Allocated, Expended, Remaining, Q3 YTD</li>
+    </ul>
+  </div>
+  <div>
+    <h3 class="sub-title">Finance Manager — Edit Mode</h3>
+    <ul class="fn-list">
+      <li><strong>Edit Data</strong> button activates inline editing (Finance + Super only)</li>
+      <li>Q1–Q4 cells become number inputs per budget line</li>
+      <li>Allocated budget editable per line and per area total</li>
+      <li>All totals, %, progress bars recalculate live</li>
+      <li><strong>Save Changes</strong> — persists to localStorage</li>
+      <li><strong>Cancel</strong> — discards all unsaved edits</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 4.6 -->
+<h2 class="module-title">4.6 M&amp;E Summary &nbsp;<code>/me-summary</code></h2>
+<p>Consolidated departmental M&amp;E view — three tabs combining Workplan and Quarterly Report data across all branches.</p>
+
+<table>
+  <thead><tr><th>Tab</th><th>Purpose</th><th>Key Features</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Annual KRA View</strong><br/><span style="font-size:7.5pt;color:#64748b;">ToR §3.2.4</span></td>
+      <td>All KRAs from approved / active workplans across the department</td>
+      <td>Filter by fiscal year · Columns: Division, KRA, Program, Status, Activities, KPIs, Expected Outcomes, Weight % · Export CSV</td>
+    </tr>
+    <tr>
+      <td><strong>Quarterly Submissions</strong></td>
+      <td>All submitted and reviewed quarterly reports consolidated</td>
+      <td>Summary cards: Reports Submitted, Activities Completed, Completion Rate % · Filter by Quarter and Wing · Entry-level CSV export</td>
+    </tr>
+    <tr>
+      <td><strong>Compliance Tracker</strong></td>
+      <td>Branch-by-branch reporting compliance grid</td>
+      <td>Every branch as row · Q1–Q4 as columns · Status: Reviewed / Submitted / Draft / — · Overall compliance % with RAG colour coding · Export CSV</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 4.7–4.11 -->
+<div class="section-break">
+  <h2 class="module-title">4.7 Reports Registry &nbsp;<code>/reports</code></h2>
+  <p>Unified registry aggregating all Quarterly Reports and Budget Plans. Status cards (Reviewed / Submitted / Draft) filter the table. Type filter for Quarterly vs Budget Plan. Shows: Title, Type (icon-coded), Division, Fiscal Year, Submitted By, Date, Status. <strong>Export CSV</strong> of filtered list.</p>
+
+  <h2 class="module-title">4.8 KPI Monitoring &nbsp;<code>/kpi</code></h2>
+  <p>Tracks six DICT programme KPIs with 6-month trend history and target comparison. Each KPI card shows: program area, unit, target vs actual, baseline, status badge (On Track / At Risk / Off Track / Exceeded), trend indicator, and last updated date. Filter by status. Expandable trend chart per KPI.</p>
+
+  <div class="callout" style="margin-top:8px; font-size:8.5pt;">
+    <strong>KPIs monitored:</strong> Government Cloud Adoption Rate (%) · Cybersecurity Incidents Resolved · ICT Policy Documents Reviewed · Partnership MOUs Signed · DevOps Pipeline Deployments · Staff ICT Training Completion
+  </div>
+
+  <h2 class="module-title">4.9 Projects &nbsp;<code>/projects</code></h2>
+  <p>Tracks capital and programme projects. Each project card shows: name, program area, status badge, completion %, lead officer, budget vs spent, beneficiary count, and milestone tracker with due dates and completion ticks. Five active projects across all functional areas.</p>
+
+  <h2 class="module-title">4.10 Corporate Plan &nbsp;<code>/corporate-plan</code></h2>
+  <p>Displays DICT strategic priorities with objectives. Annual Workplans can be linked to a strategic priority so KRAs auto-populate from the priority's objectives — ensuring all divisional plans align to the Corporate Plan.</p>
+
+  <h2 class="module-title">4.11 Organisation Chart &nbsp;<code>/organisation</code></h2>
+  <p>Visual organisational structure: 4 Functional Areas → Programs → Activities/Branches. Shows head/role for each area. Colour-coded by wing. Lists Executive Managers per program and Branch Managers per activity.</p>
+
+  <h2 class="module-title">4.12 My Team &amp; Task Management &nbsp;<code>/my-team</code></h2>
+  <div class="grid-2">
+    <div>
+      <h3 class="sub-title">Officer Management</h3>
+      <ul class="fn-list">
+        <li>Create officers: name, email, position, division, program, status</li>
+        <li>View full roster with active/inactive status</li>
+        <li>Deactivate/reactivate officers</li>
+        <li>Overview stats: total officers, active count</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="sub-title">Task Assignment</h3>
+      <ul class="fn-list">
+        <li>Create tasks: title, description, priority, due date, program</li>
+        <li>Priority: Low / Medium / High / Urgent</li>
+        <li>Status: Pending / In Progress / Completed / Overdue</li>
+        <li>Edit progress (0–100%), add notes, mark complete</li>
+        <li>Filter by status · Task completion rate card</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="module-title">4.13 My Tasks (Officers) &nbsp;<code>/my-tasks</code></h2>
+  <p>Officers view tasks assigned by their manager. Update progress %, add update notes, view priority and due date. Overdue tasks are automatically flagged based on due date. Filter by status and priority.</p>
+
+  <h2 class="module-title">4.14 User Management &nbsp;<code>/users</code> &nbsp;<span class="badge badge-red">Super Only</span></h2>
+  <p>System-wide account management: view all users (name, email, role, division, status, last login, created date) · Create new accounts for any role and division · Edit role, division, status · Deactivate/reactivate accounts · Role distribution summary.</p>
+
+  <h2 class="module-title">4.15 Help &amp; User Guide &nbsp;<code>/help</code></h2>
+  <p>Role-aware step-by-step guides that adapt to who is logged in. Three guide sets: Branch Manager (Budget Plan, Quarterly Report, Requests, Workplan) · Executive/Management (Review reports, Review budgets, M&amp;E Summary, Approvals) · Finance Manager (Finance approvals, Acquittals, Budget tracking). System information panel with role, division, authentication, and ToR reference.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 5 -->
+<div class="section-break">
+  <h1 class="section-title">5. Approval Chain Workflows</h1>
+
+  <h3 class="sub-title" style="margin-top:12px;">Funding / Procurement Request</h3>
+  <div class="flow">
+    <span class="note">Submit Request</span>
+    <span class="arrow"> → </span><span class="stage">[Pending EM]</span>
+    <span class="arrow"> → Approve → </span><span class="stage">[Pending Deputy]</span>
+    <span class="arrow"> → Approve → </span><span class="stage">[Pending DCS]</span>
+    <span class="arrow"> → Approve → </span><span class="stage">[Pending Finance]</span>
+    <br/>
+    <span class="arrow">                                                 → Approve + Budget Line → </span><span class="stage">[Pending Acquittal]</span>
+    <br/>
+    <span class="arrow">                                                                        → Submit Acquittal → </span><span class="stage">[Acquittal Review]</span>
+    <span class="arrow"> → Accept → </span><span class="stage">[Closed]</span>
+    <br/><br/>
+    <span class="note">At any stage: Reject → [Rejected] &nbsp;|&nbsp; Defer → [Deferred] (can be reactivated)</span>
+  </div>
+
+  <h3 class="sub-title">Training Request</h3>
+  <div class="flow">
+    <span class="note">Submit</span><span class="arrow"> → </span><span class="stage">[Pending EM]</span><span class="arrow"> → Approve → </span><span class="stage">[Pending Deputy]</span><span class="arrow"> → Approve → </span><span class="stage">[Closed]</span>
+  </div>
+
+  <h3 class="sub-title">Policy / Compliance Request</h3>
+  <div class="flow">
+    <span class="note">Submit</span><span class="arrow"> → </span><span class="stage">[Pending EM]</span><span class="arrow"> → Approve → </span><span class="stage">[Pending DCS]</span><span class="arrow"> → Approve → </span><span class="stage">[Closed]</span>
+  </div>
+
+  <h3 class="sub-title">Leave / Travel &amp; IT Support Requests</h3>
+  <div class="flow">
+    <span class="note">Submit</span><span class="arrow"> → </span><span class="stage">[Pending EM]</span><span class="arrow"> → Approve → </span><span class="stage">[Closed]</span>
+  </div>
+
+  <h3 class="sub-title">Quarterly Report Review Cycle</h3>
+  <div class="flow">
+    <span class="note">Branch Manager creates report</span><span class="arrow"> → </span><span class="stage">[Draft]</span><span class="arrow"> → Submit → </span><span class="stage">[Submitted]</span>
+    <br/>
+    <span class="arrow">                                      → Executive Manager reviews + comment → </span><span class="stage">[Reviewed]</span>
+  </div>
+
+  <h3 class="sub-title">Budget Plan Review Cycle</h3>
+  <div class="flow">
+    <span class="note">Branch Manager creates plan</span><span class="arrow"> → </span><span class="stage">[Draft]</span><span class="arrow"> → Submit → </span><span class="stage">[Submitted]</span><span class="arrow"> → Management reviews + comment → </span><span class="stage">[Reviewed]</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 6 -->
+<h1 class="section-title" style="margin-top:14px;">6. Data Export Capabilities</h1>
+
+<table>
+  <thead><tr>
+    <th>Module</th><th>Export Scope</th><th>File Name Pattern</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Quarterly Report (individual)</strong></td>
+      <td>All entries — 11 columns including KRA, activities, KPIs, budget, expenditure, status, officers</td>
+      <td><code>[Report-Title]-[FiscalYear].csv</code></td>
+    </tr>
+    <tr>
+      <td><strong>Budget Plan (individual)</strong></td>
+      <td>All budget items — category, description, estimated cost, utilized, justification</td>
+      <td><code>[Plan-Title]-Budget-Plan.csv</code></td>
+    </tr>
+    <tr>
+      <td><strong>M&amp;E Summary — Annual KRA View</strong></td>
+      <td>All KRAs across approved workplans — division, KRA, program, activities, KPIs, expected outcomes, weight</td>
+      <td><code>DICT-Annual-KRA-View.csv</code></td>
+    </tr>
+    <tr>
+      <td><strong>M&amp;E Summary — Quarterly Submissions</strong></td>
+      <td>Entry-level detail from all submitted reports — 18 columns including all QR fields plus metadata</td>
+      <td><code>DICT-Quarterly-Submissions.csv</code></td>
+    </tr>
+    <tr>
+      <td><strong>M&amp;E Summary — Compliance Tracker</strong></td>
+      <td>Per-branch Q1–Q4 reporting status grid with quarters-submitted count</td>
+      <td><code>DICT-Reporting-Compliance.csv</code></td>
+    </tr>
+    <tr>
+      <td><strong>Reports Registry</strong></td>
+      <td>Filtered list of reports — title, type, division, fiscal year, status, submitted by, date</td>
+      <td><code>DICT-Reports.csv</code></td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 7 -->
+<div class="section-break">
+  <h1 class="section-title">7. Page Access Matrix</h1>
+  <p>✓ = Full access &nbsp;·&nbsp; — = No access</p>
+
+  <table>
+    <thead><tr>
+      <th>Page / Module</th>
+      <th class="center">Super</th>
+      <th class="center">Deputy</th>
+      <th class="center">DCS</th>
+      <th class="center">Exec.</th>
+      <th class="center">Admin</th>
+      <th class="center">Finance</th>
+      <th class="center">Officer</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Overview Dashboard</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td></tr>
+      <tr><td>Organisation Chart</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Corporate Plan</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Expenditure Budget</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Expenditure Budget — Edit Data</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Projects</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>KPI Monitoring</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Reports Registry</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Annual Workplan</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Quarterly Reports</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Budget Plan</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>M&amp;E Summary</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Settings</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>User Management</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>My Requests</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td></tr>
+      <tr><td>Approvals</td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>Finance</td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>My Team</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="dash">—</span></td></tr>
+      <tr><td>My Tasks</td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="dash">—</span></td><td class="center"><span class="check">✓</span></td></tr>
+      <tr><td>My Profile</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td></tr>
+      <tr><td>Help / User Guide</td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td><td class="center"><span class="check">✓</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 8 -->
+<h1 class="section-title" style="margin-top:14px;">8. Data Storage &amp; Persistence</h1>
+
+<p>All data currently persists to <strong>browser localStorage</strong> per device. When the AWS DynamoDB/AppSync backend is connected, data will sync to the cloud automatically.</p>
+
+<table>
+  <thead><tr><th>Module</th><th>localStorage Key</th><th>Data Type</th></tr></thead>
+  <tbody>
+    <tr><td>Annual Workplans</td><td><code>dict_me_workplans</code></td><td>AnnualWorkplan[]</td></tr>
+    <tr><td>Quarterly Reports</td><td><code>dict_me_qr</code></td><td>QuarterlyReport[]</td></tr>
+    <tr><td>Budget Plans</td><td><code>dict_me_budget_plans</code></td><td>BudgetPlan[]</td></tr>
+    <tr><td>Funding / All Requests</td><td><code>dict_me_funding_requests</code></td><td>FundingRequest[]</td></tr>
+    <tr><td>Expenditure Budget</td><td><code>dict_me_budget_areas</code></td><td>BudgetArea[]</td></tr>
+    <tr><td>Officers (My Team)</td><td><code>dict_me_officers</code></td><td>Officer[]</td></tr>
+    <tr><td>Tasks</td><td><code>dict_me_tasks</code></td><td>Task[]</td></tr>
+  </tbody>
+</table>
+
+<div class="callout callout-amber" style="margin-top:10px;">
+  <strong>Note:</strong> localStorage data is device-specific. For multi-device / multi-user production use, connect the AWS DynamoDB backend via AppSync. Authentication is already handled by AWS Cognito.
+</div>
+
+<div class="callout callout-green" style="margin-top:10px; font-size:8.5pt;">
+  <strong>Production build status:</strong> All 25 routes compiled with zero TypeScript errors. Build verified March 2026. Platform: Next.js 16.1.6 · Node.js 24.9 · Tailwind CSS v4.
+</div>
+
+<br/><br/>
+<div style="text-align:center; padding:16px; border-top:2px solid #e2e8f0; margin-top:20px;">
+  <p style="font-size:8pt; color:#94a3b8; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;">Department of Information &amp; Communications Technology — Papua New Guinea</p>
+  <p style="font-size:7.5pt; color:#cbd5e1; margin-top:4px;">DICT M&amp;E Dashboard · System Functions Report · March 2026 · Internal Use Only</p>
+</div>
+
+</div><!-- end .page -->
+
+<div class="page-footer">
+  <span>DICT M&amp;E Dashboard — System Functions Report</span>
+  <span>Internal Use Only · March 2026</span>
+</div>
+
+</body>
+</html>

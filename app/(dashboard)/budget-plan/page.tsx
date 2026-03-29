@@ -5,9 +5,10 @@ import { useBudgetPlan } from '@/lib/budget-plan-context'
 import { useAuth } from '@/lib/auth-context'
 import type { BudgetPlan, BudgetPlanItem, BudgetPlanStatus } from '@/types'
 import { FUNCTIONAL_AREAS } from '@/lib/org-data'
+import { exportCSV } from '@/lib/utils'
 import {
   Plus, ArrowLeft, Printer, Send, CheckCircle2, FileEdit,
-  Trash2, X, Wallet, Eye, AlertCircle,
+  Trash2, X, Wallet, Eye, AlertCircle, Download,
 } from 'lucide-react'
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
@@ -329,6 +330,16 @@ function PlanDetail({ plan, onUpdate, onDelete, onBack, canEdit, canReview }: {
                 <Send className="w-3.5 h-3.5" /> Submit
               </button>
             )}
+            <button onClick={() => exportCSV(plan.items.map(i => ({
+              'Budget Category': i.category,
+              'Description of Items / Activities': i.description,
+              'Estimated Cost (K)': i.estimatedCost,
+              'Utilized (K)': i.utilized,
+              'Justification / Remarks': i.justification,
+            })), `${plan.title.replace(/\s+/g, '-')}-Budget-Plan`)}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded hover:bg-gray-50 transition-colors">
+              <Download className="w-3.5 h-3.5" /> Export CSV
+            </button>
             <button onClick={() => window.print()} className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded hover:bg-gray-50 transition-colors">
               <Printer className="w-3.5 h-3.5" /> Print
             </button>
