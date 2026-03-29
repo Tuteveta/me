@@ -15,7 +15,7 @@ import {
 function uid() { return Math.random().toString(36).slice(2, 9) }
 
 function emptyEntry(quarter: QuarterLabel = 'Q1'): QREntry {
-  return { id: uid(), quarter, kra: '', plannedActivity: '', kpi: '', approvedBudget: '', expenditure: '', status: 'Not Started', justification: '', officersInCharge: '' }
+  return { id: uid(), quarter, kra: '', program: '', plannedActivity: '', kpi: '', expectedOutcomes: '', approvedBudget: '', expenditure: '', status: 'Not Started', justification: '', officersInCharge: '' }
 }
 
 function buildFromWorkplan(wp: AnnualWorkplan, quarters: QuarterLabel[]): QREntry[] {
@@ -28,8 +28,10 @@ function buildFromWorkplan(wp: AnnualWorkplan, quarters: QuarterLabel[]): QREntr
       }).join('; ')
       entries.push({
         id: uid(), quarter: q, kra: kra.title,
+        program: '',
         plannedActivity: kra.description || '',
         kpi: kpiStr || '',
+        expectedOutcomes: '',
         approvedBudget: '', expenditure: '', status: 'Not Started',
         justification: '', officersInCharge: kra.kpis[0]?.responsible || '',
       })
@@ -231,7 +233,9 @@ function EntryRow({ entry, editing, onChange, onDelete }: {
         <td className="px-3 py-2 text-xs font-bold text-blue-700 whitespace-nowrap">{entry.quarter}</td>
         <td className="px-3 py-2 text-xs text-gray-800 max-w-32">{entry.kra || dash}</td>
         <td className="px-3 py-2 text-xs text-gray-700 max-w-40">{entry.plannedActivity || dash}</td>
+        <td className="px-3 py-2 text-xs text-gray-700 max-w-32">{entry.program || dash}</td>
         <td className="px-3 py-2 text-xs text-gray-700 max-w-40">{entry.kpi || dash}</td>
+        <td className="px-3 py-2 text-xs text-gray-700 max-w-40">{entry.expectedOutcomes || dash}</td>
         <td className="px-3 py-2 text-xs text-gray-700 text-right whitespace-nowrap">{entry.approvedBudget || '—'}</td>
         <td className="px-3 py-2 text-xs text-gray-700 text-right whitespace-nowrap">{entry.expenditure || '—'}</td>
         <td className="px-3 py-2 text-xs whitespace-nowrap">
@@ -252,7 +256,9 @@ function EntryRow({ entry, editing, onChange, onDelete }: {
       </td>
       <td className="px-2 py-1.5 min-w-32"><input value={entry.kra} onChange={e => set('kra', e.target.value)} placeholder="KRA title" className={cell} /></td>
       <td className="px-2 py-1.5 min-w-40"><textarea value={entry.plannedActivity} onChange={e => set('plannedActivity', e.target.value)} rows={2} placeholder="Planned activity" className={`${cell} resize-none`} /></td>
+      <td className="px-2 py-1.5 min-w-32"><input value={entry.program} onChange={e => set('program', e.target.value)} placeholder="Program / Project" className={cell} /></td>
       <td className="px-2 py-1.5 min-w-40"><textarea value={entry.kpi} onChange={e => set('kpi', e.target.value)} rows={2} placeholder="KPI name / target" className={`${cell} resize-none`} /></td>
+      <td className="px-2 py-1.5 min-w-40"><textarea value={entry.expectedOutcomes} onChange={e => set('expectedOutcomes', e.target.value)} rows={2} placeholder="Expected outcomes" className={`${cell} resize-none`} /></td>
       <td className="px-2 py-1.5 w-24"><input value={entry.approvedBudget} onChange={e => set('approvedBudget', e.target.value)} placeholder="K 0" className={cell} /></td>
       <td className="px-2 py-1.5 w-24"><input value={entry.expenditure} onChange={e => set('expenditure', e.target.value)} placeholder="K 0" className={cell} /></td>
       <td className="px-2 py-1.5 w-28">
@@ -419,7 +425,7 @@ function ReportDetail({ report, onUpdate, onDelete, onBack, canEdit, canReview }
               <table className="w-full text-xs border-collapse" style={{ minWidth: 960 }}>
                 <thead>
                   <tr className="bg-gray-100 border-b-2 border-gray-300">
-                    {['Quarter', 'KRA', 'Planned Activity', 'KPIs', 'Approved Budget (K)', 'Quarter Expenditure', 'Status (Completed/Ongoing)', 'Justification / Remarks', 'Officers in Charge'].map(h => (
+                    {['Quarter', 'KRA', 'Program / Project', 'Description of Key Activities', 'KPIs', 'Expected Outcomes', 'Approved Budget (K)', 'Quarter Expenditure', 'Status', 'Justification / Remarks', 'Officers in Charge'].map(h => (
                       <th key={h} className="text-left px-3 py-2.5 text-gray-700 font-bold border-r border-gray-200 last:border-r-0 whitespace-nowrap text-[11px]">{h}</th>
                     ))}
                     {editing && <th className="w-10" />}
@@ -553,19 +559,24 @@ export default function QuarterlyReportPage() {
   const isManager  = user?.role === 'admin' || user?.role === 'super'
   const isExecutive = ['executive', 'deputy', 'dcs', 'super'].includes(user?.role ?? '')
 
-  const activeReport = reports.find(r => r.id === activeId) ?? null
+  // Branch Managers (admin) only see their own reports (ToR §3.3.2)
+  const visibleReports = (isExecutive && user?.role !== 'admin')
+    ? reports
+    : reports.filter(r => r.createdBy === user?.name)
 
-  const filtered = reports.filter(r => filter === 'all' || r.status === filter)
+  const activeReport = visibleReports.find(r => r.id === activeId) ?? null
+
+  const filtered = visibleReports.filter(r => filter === 'all' || r.status === filter)
 
   const counts = {
-    all:       reports.length,
-    draft:     reports.filter(r => r.status === 'draft').length,
-    submitted: reports.filter(r => r.status === 'submitted').length,
-    reviewed:  reports.filter(r => r.status === 'reviewed').length,
+    all:       visibleReports.length,
+    draft:     visibleReports.filter(r => r.status === 'draft').length,
+    submitted: visibleReports.filter(r => r.status === 'submitted').length,
+    reviewed:  visibleReports.filter(r => r.status === 'reviewed').length,
   }
 
   // Pending review count for executives
-  const pendingReview = reports.filter(r => r.status === 'submitted').length
+  const pendingReview = visibleReports.filter(r => r.status === 'submitted').length
 
   function handleCreate(r: QuarterlyReport) {
     addReport(r); setShowNew(false); setActiveId(r.id); setView('detail')

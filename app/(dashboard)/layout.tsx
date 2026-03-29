@@ -8,6 +8,7 @@ import { WorkplanProvider } from '@/lib/workplan-context'
 import { TeamProvider } from '@/lib/team-context'
 import { CorporatePlanProvider } from '@/lib/corporate-plan-context'
 import { QuarterlyReportProvider } from '@/lib/quarterly-report-context'
+import { BudgetPlanProvider } from '@/lib/budget-plan-context'
 import DashboardShell from '@/components/layout/DashboardShell'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -34,16 +35,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null
 
   return (
-    <QuarterlyReportProvider>
-      <CorporatePlanProvider>
-        <WorkplanProvider>
-          <FundingProvider>
-            <TeamProvider>
-              <DashboardShell>{children}</DashboardShell>
-            </TeamProvider>
-          </FundingProvider>
-        </WorkplanProvider>
-      </CorporatePlanProvider>
-    </QuarterlyReportProvider>
+    <BudgetPlanProvider>
+      <QuarterlyReportProvider>
+        <CorporatePlanProvider>
+          <WorkplanProvider>
+            <FundingProvider>
+              <TeamProvider>
+                <DashboardShell>{children}</DashboardShell>
+              </TeamProvider>
+            </FundingProvider>
+          </WorkplanProvider>
+        </CorporatePlanProvider>
+      </QuarterlyReportProvider>
+    </BudgetPlanProvider>
   )
 }

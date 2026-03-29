@@ -313,8 +313,10 @@ export interface QREntry {
   id: string
   quarter: QuarterLabel
   kra: string
+  program: string
   plannedActivity: string
   kpi: string
+  expectedOutcomes: string
   approvedBudget: string
   expenditure: string
   status: QREntryStatus
@@ -339,4 +341,33 @@ export interface QuarterlyReport {
   workplanId?: string
   workplanTitle?: string
   entries: QREntry[]
+}
+
+// ── Budget Plan ───────────────────────────────────────────
+export type BudgetPlanStatus = 'draft' | 'submitted' | 'reviewed'
+
+export interface BudgetPlanItem {
+  id: string
+  category: string
+  description: string
+  estimatedCost: string
+  utilized: string
+  justification: string
+}
+
+export interface BudgetPlan {
+  id: string
+  title: string
+  fiscalYear: string
+  wing: string
+  division: string
+  branch: string
+  createdBy: string
+  createdAt: string
+  submittedAt?: string
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewComment?: string
+  status: BudgetPlanStatus
+  items: BudgetPlanItem[]
 }
